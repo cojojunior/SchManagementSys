@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { teachingAssignmentsService } from "@/services/teaching-assignments";
+import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
 import type { TeachingAssignment } from "@/types/teaching-assignment";
 
 export default function AssignmentDetailPage() {

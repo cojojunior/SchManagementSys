@@ -20,7 +20,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
 import { useLookup } from "@/hooks/useLookup";
-import { teachingAssignmentsService } from "@/services/teaching-assignments";
+import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
 import { staffService } from "@/services/staff";
 import { classesService } from "@/services/classes";
 import { subjectsService } from "@/services/subjects";

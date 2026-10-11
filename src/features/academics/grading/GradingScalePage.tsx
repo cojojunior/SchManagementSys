@@ -6,7 +6,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { gradingService } from "@/services/grading";
+import { gradingService } from "@/services/supabase/grading";
 import type { GradingScale } from "@/types/grading";
 
 const DIVISION_LABELS: Record<string, string> = {

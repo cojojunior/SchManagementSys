@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
-import { gradingService } from "@/services/grading";
+import { gradingService } from "@/services/supabase/grading";
 import type { Division } from "@/types/common";
 
 const DIVISION_OPTIONS: { value: Division; label: string }[] = [

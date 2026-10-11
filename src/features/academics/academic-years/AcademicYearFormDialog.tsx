@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
-import { academicYearsService } from "@/services/academic-years";
+import { academicYearsService } from "@/services/supabase/academic-years";
 import type { AcademicYear } from "@/types/academic-year";
 import { useState } from "react";
 

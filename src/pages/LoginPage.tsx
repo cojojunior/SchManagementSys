@@ -1,18 +1,40 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ROLES, ROLE_HOME, ROLE_LABELS, type Role } from "@/lib/constants";
+import { ROLE_HOME, type Role } from "@/lib/constants";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { FormField } from "@/components/ui/FormField";
 
 export default function LoginPage() {
-  const { signInAs } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [role, setRole] = useState<Role>("super_admin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [working, setWorking] = useState(false);
 
-  function handleContinue() {
-    signInAs(role);
-    navigate(ROLE_HOME[role]);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setWorking(true);
+    setError(null);
+    try {
+      const result = await signIn(email.trim(), password);
+      if (!result.ok) {
+        setError(result.reason ?? "Sign-in failed");
+        return;
+      }
+
+      const { data } = supabase
+        ? await supabase.auth.getSession()
+        : { data: { session: null } };
+      const role = data.session?.user.app_metadata?.role as Role | undefined;
+      navigate(role ? ROLE_HOME[role] : "/admin", { replace: true });
+    } finally {
+      setWorking(false);
+    }
   }
 
   return (
@@ -24,33 +46,43 @@ export default function LoginPage() {
               SA
             </div>
             <h1 className="mt-3 text-xl font-semibold">Supreme Academy</h1>
-            <p className="text-sm text-ink-500">
-              Sign in to continue
-              <span className="ml-1 text-ink-400">· demo mode</span>
-            </p>
+            <p className="text-sm text-ink-500">Staff sign in</p>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Sign in as</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-              className="w-full h-10 rounded-lg border border-ink-200 bg-white px-3 text-sm">
-              {ROLES.filter((r) => r !== "student").map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-ink-500">
-              Real authentication is added in Phase 6. For now, pick a staff
-              role to preview its portal.
-            </p>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField label="Email" required>
+              <Input
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@supreme.edu.gh"
+              />
+            </FormField>
 
-          <Button className="w-full" size="lg" onClick={handleContinue}>
-            Continue
-          </Button>
+            <FormField label="Password" required>
+              <Input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </FormField>
+
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={working || !email || !password}>
+              {working ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
 
           <div className="text-center text-sm space-y-2 pt-4 border-t border-ink-200">
             <div className="text-ink-500">Are you a student?</div>

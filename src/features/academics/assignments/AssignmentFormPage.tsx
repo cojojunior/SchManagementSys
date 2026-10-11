@@ -12,7 +12,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { useLookup } from "@/hooks/useLookup";
-import { teachingAssignmentsService } from "@/services/teaching-assignments";
+import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
 import { staffService } from "@/services/staff";
 import { classesService } from "@/services/classes";
 import { subjectsService } from "@/services/subjects";

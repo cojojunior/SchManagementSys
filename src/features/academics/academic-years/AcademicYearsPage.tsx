@@ -8,7 +8,7 @@ import { RoleGate } from "@/features/auth/RoleGate";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AcademicYearFormDialog } from "./AcademicYearFormDialog";
 import { TermFormDialog } from "./TermFormDialog";
-import { academicYearsService } from "@/services/academic-years";
+import { academicYearsService } from "@/services/supabase/academic-years";
 import type { AcademicYear, AcademicTerm } from "@/types/academic-year";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/cn";
