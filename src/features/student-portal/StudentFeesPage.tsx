@@ -5,7 +5,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useCurrentStudent } from "@/features/auth/useCurrentStudent";
-import { invoicesService } from "@/services/invoices";
+import { invoicesService } from "@/services/supabase/invoices";
 import type { Invoice, StudentLedger } from "@/types/finance";
 import { formatCurrency, formatDate } from "@/lib/format";
 

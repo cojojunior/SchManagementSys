@@ -19,7 +19,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
-import { scratchCardsService } from "@/services/scratch-cards";
+import { scratchCardsService } from "@/services/supabase/scratch-cards";
 import type { ScratchCard, ScratchCardFilters } from "@/types/scratch-card";
 import { formatCurrency, formatDate } from "@/lib/format";
 

@@ -13,9 +13,9 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { useLookup } from "@/hooks/useLookup";
 import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
-import { staffService } from "@/services/staff";
-import { classesService } from "@/services/classes";
-import { subjectsService } from "@/services/subjects";
+import { staffService } from "@/services/supabase/staff";
+import { classesService } from "@/services/supabase/classes";
+import { subjectsService } from "@/services/supabase/subjects";
 import type { TeachingAssignmentFormValues } from "@/types/teaching-assignment";
 
 const schema = z.object({

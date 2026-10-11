@@ -14,7 +14,7 @@ import {
   TD,
   TableEmpty,
 } from "@/components/ui/Table";
-import { invoicesService } from "@/services/invoices";
+import { invoicesService } from "@/services/supabase/invoices";
 import type { Payment } from "@/types/finance";
 import { formatCurrency, formatDate } from "@/lib/format";
 

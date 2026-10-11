@@ -20,9 +20,9 @@ import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
 import { useLookup } from "@/hooks/useLookup";
-import { assessmentsService } from "@/services/assessments";
-import { classesService } from "@/services/classes";
-import { subjectsService } from "@/services/subjects";
+import { assessmentsService } from "@/services/supabase/assessments";
+import { classesService } from "@/services/supabase/classes";
+import { subjectsService } from "@/services/supabase/subjects";
 import type { Assessment, AssessmentFilters } from "@/types/assessment";
 
 const PAGE_SIZE = 10;

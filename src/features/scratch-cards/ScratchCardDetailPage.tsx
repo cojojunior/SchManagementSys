@@ -13,8 +13,8 @@ import { FormField } from "@/components/ui/FormField";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useLookup } from "@/hooks/useLookup";
-import { scratchCardsService } from "@/services/scratch-cards";
-import { studentsService } from "@/services/students";
+import { scratchCardsService } from "@/services/supabase/scratch-cards";
+import { studentsService } from "@/services/supabase/students";
 import type { ScratchCard, ScratchCardUsage } from "@/types/scratch-card";
 import { formatCurrency, formatDate } from "@/lib/format";
 

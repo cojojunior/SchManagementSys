@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { RecordPaymentDialog } from "./RecordPaymentDialog";
-import { invoicesService } from "@/services/invoices";
+import { invoicesService } from "@/services/supabase/invoices";
 import type { Invoice, Payment } from "@/types/finance";
 import { formatCurrency, formatDate } from "@/lib/format";
 

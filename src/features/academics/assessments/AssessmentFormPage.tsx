@@ -12,11 +12,11 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { useLookup } from "@/hooks/useLookup";
-import { assessmentsService } from "@/services/assessments";
-import { classesService } from "@/services/classes";
-import { subjectsService } from "@/services/subjects";
-import { academicYearsService } from "@/services/academic-years";
-import { staffService } from "@/services/staff";
+import { assessmentsService } from "@/services/supabase/assessments";
+import { classesService } from "@/services/supabase/classes";
+import { subjectsService } from "@/services/supabase/subjects";
+import { academicYearsService } from "@/services/supabase/academic-years";
+import { staffService } from "@/services/supabase/staff";
 import type { AssessmentFormValues } from "@/types/assessment";
 
 const schema = z.object({

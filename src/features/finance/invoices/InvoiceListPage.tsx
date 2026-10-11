@@ -19,7 +19,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
-import { invoicesService } from "@/services/invoices";
+import { invoicesService } from "@/services/supabase/invoices";
 import type { Invoice, InvoiceFilters } from "@/types/finance";
 import { formatCurrency, formatDate } from "@/lib/format";
 

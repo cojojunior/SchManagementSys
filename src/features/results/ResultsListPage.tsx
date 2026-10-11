@@ -19,9 +19,9 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { useList } from "@/hooks/useList";
 import { useLookup } from "@/hooks/useLookup";
-import { resultsService } from "@/services/results";
-import { classesService } from "@/services/classes";
-import { subjectsService } from "@/services/subjects";
+import { resultsService } from "@/services/supabase/results";
+import { classesService } from "@/services/supabase/classes";
+import { subjectsService } from "@/services/supabase/subjects";
 import type { AssessmentResult, ResultFilters } from "@/types/result";
 
 const PAGE_SIZE = 10;

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { assessmentWeightService } from "@/services/assessment-weight";
+import { assessmentWeightService } from "@/services/supabase/assessment-weight";
 import type { AssessmentWeight } from "@/types/assessment-weight";
 import { formatDate } from "@/lib/format";
 
@@ -101,8 +101,7 @@ export default function AssessmentWeightPage() {
                   label="Assessment weight (%)"
                   required
                   error={errors.assessmentPercent?.message}
-                  hint="Homework, class tests, projects, mid-term"
-                >
+                  hint="Homework, class tests, projects, mid-term">
                   <Input
                     type="number"
                     {...register("assessmentPercent")}
@@ -114,8 +113,7 @@ export default function AssessmentWeightPage() {
                   label="End-of-Term Exam weight (%)"
                   required
                   error={errors.examPercent?.message}
-                  hint="Final exam at end of term"
-                >
+                  hint="Final exam at end of term">
                   <Input
                     type="number"
                     {...register("examPercent")}
@@ -130,8 +128,7 @@ export default function AssessmentWeightPage() {
                   total === 100
                     ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                     : "border-amber-200 bg-amber-50 text-amber-800",
-                ].join(" ")}
-              >
+                ].join(" ")}>
                 <span>Total</span>
                 <span className="font-semibold tabular-nums">{total}%</span>
               </div>
@@ -151,8 +148,7 @@ export default function AssessmentWeightPage() {
 
               <div className="flex items-center justify-between">
                 <p className="text-xs text-ink-500">
-                  Last updated:{" "}
-                  {current ? formatDate(current.updatedAt) : "—"}
+                  Last updated: {current ? formatDate(current.updatedAt) : "—"}
                 </p>
                 <RoleGate resource="school_settings" action="update">
                   <Button type="submit" disabled={saving}>
@@ -173,11 +169,13 @@ export default function AssessmentWeightPage() {
               as:
             </p>
             <div className="rounded-lg bg-ink-50 px-3 py-2 font-mono text-xs">
-              final = (assessment × {assessmentValue || 0}%) + (exam × {examValue || 0}%)
+              final = (assessment × {assessmentValue || 0}%) + (exam ×{" "}
+              {examValue || 0}%)
             </div>
             <p>
               The weights must total 100%. Changes apply to future score
-              calculations. Published results are not retroactively recalculated.
+              calculations. Published results are not retroactively
+              recalculated.
             </p>
           </CardBody>
         </Card>

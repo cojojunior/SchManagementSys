@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { invoicesService } from "@/services/invoices";
+import { invoicesService } from "@/services/supabase/invoices";
 import type { StudentLedger } from "@/types/finance";
 import { formatCurrency, formatDate } from "@/lib/format";
 

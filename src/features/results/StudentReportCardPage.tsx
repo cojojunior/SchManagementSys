@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useLookup } from "@/hooks/useLookup";
 import { reportCardService } from "@/services/report-card";
-import { academicYearsService } from "@/services/academic-years";
+import { academicYearsService } from "@/services/supabase/academic-years";
 import { ReportCardPDF } from "./ReportCardPDF";
 import type { ReportCardData } from "@/types/report-card";
 import { formatDate } from "@/lib/format";

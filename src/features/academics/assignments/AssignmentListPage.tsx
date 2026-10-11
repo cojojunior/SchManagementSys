@@ -21,9 +21,9 @@ import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
 import { useLookup } from "@/hooks/useLookup";
 import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
-import { staffService } from "@/services/staff";
-import { classesService } from "@/services/classes";
-import { subjectsService } from "@/services/subjects";
+import { staffService } from "@/services/supabase/staff";
+import { classesService } from "@/services/supabase/classes";
+import { subjectsService } from "@/services/supabase/subjects";
 import type {
   TeachingAssignment,
   TeachingAssignmentFilters,

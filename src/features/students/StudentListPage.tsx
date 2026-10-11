@@ -17,7 +17,7 @@ import {
   TableEmpty,
 } from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
-import { studentsService } from "@/services/students";
+import { studentsService } from "@/services/supabase/student";
 import type { Student, StudentFilters } from "@/types/student";
 import { formatDate } from "@/lib/format";
 

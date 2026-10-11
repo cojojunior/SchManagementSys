@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { useAuth } from "@/features/auth/AuthContext";
-import { invoicesService } from "@/services/invoices";
+import { invoicesService } from "@/services/supabase/invoices";
 import type { Invoice } from "@/types/finance";
 import { CURRENCY_SYMBOL } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
