@@ -19,7 +19,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
-import { subjectsService } from "@/services/subjects";
+import { subjectsService } from "@/services/supabase/subjects";
 import type { Subject, SubjectFilters } from "@/types/subjects";
 
 const PAGE_SIZE = 10;

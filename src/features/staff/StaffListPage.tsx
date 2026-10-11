@@ -19,7 +19,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
-import { staffService } from "@/services/staff";
+import { staffService } from "@/services/supabase/staff";
 import type { Staff, StaffFilters } from "@/types/staff";
 import { ROLE_LABELS } from "@/lib/constants";
 

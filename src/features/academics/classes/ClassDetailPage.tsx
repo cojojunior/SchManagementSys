@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { classesService } from "@/services/classes";
+import { classesService } from "@/services/supabase/classes";
 import type { SchoolClass } from "@/types/class";
 
 export default function ClassDetailPage() {

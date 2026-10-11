@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
-import { subjectsService } from "@/services/subjects";
+import { subjectsService } from "@/services/supabase/subjects";
 import type { Division } from "@/types/common";
 
 const DIVISION_OPTIONS: { value: Division; label: string }[] = [

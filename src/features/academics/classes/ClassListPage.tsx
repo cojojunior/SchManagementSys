@@ -19,7 +19,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
-import { classesService } from "@/services/classes";
+import { classesService } from "@/services/supabase/classes";
 import type { SchoolClass, ClassFilters } from "@/types/class";
 
 const PAGE_SIZE = 10;

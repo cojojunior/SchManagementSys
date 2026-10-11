@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
-import { classesService } from "@/services/classes";
+import { classesService } from "@/services/supabase/classes";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),

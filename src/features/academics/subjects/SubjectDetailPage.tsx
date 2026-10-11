@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { subjectsService } from "@/services/subjects";
+import { subjectsService } from "@/services/supabase/subjects";
 import type { Subject } from "@/types/subjects";
 
 const DIVISION_LABELS: Record<string, string> = {

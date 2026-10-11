@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
-import { staffService } from "@/services/staff";
+import { staffService } from "@/services/supabase/staff";
 import { ROLES, ROLE_LABELS } from "@/lib/constants";
 import type { StaffFormValues } from "@/types/staff";
 

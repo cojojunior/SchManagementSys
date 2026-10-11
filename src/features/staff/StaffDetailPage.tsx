@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { staffService } from "@/services/staff";
+import { staffService } from "@/services/supabase/staff";
 import type { Staff } from "@/types/staff";
 import { ROLE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
