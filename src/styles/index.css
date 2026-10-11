@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50:  #eef4ff;
+  --color-brand-100: #d9e4ff;
+  --color-brand-200: #b8cbff;
+  --color-brand-300: #8ba7ff;
+  --color-brand-400: #5c7dff;
+  --color-brand-500: #3b5bff;
+  --color-brand-600: #2a41e6;
+  --color-brand-700: #2233b4;
+  --color-brand-800: #1d2c8c;
+  --color-brand-900: #1b2870;
+
+  --color-ink-50:  #f7f8fa;
+  --color-ink-100: #eef0f4;
+  --color-ink-200: #dde1e8;
+  --color-ink-300: #c1c8d3;
+  --color-ink-400: #8b94a3;
+  --color-ink-500: #5c6675;
+  --color-ink-600: #3f4855;
+  --color-ink-700: #2b323c;
+  --color-ink-800: #1b2028;
+  --color-ink-900: #0f1318;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgba(15, 19, 24, 0.04),
+                 0 4px 12px rgba(15, 19, 24, 0.06);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-ink-50 text-ink-800 font-sans antialiased;
+  }
+  * {
+    @apply border-ink-200;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
+  }
+}
