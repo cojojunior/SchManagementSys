@@ -5,12 +5,10 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
-import { useAuth } from "@/features/auth/AuthContext";
-import { studentAuthService } from "@/services/student-auth";
+import { studentAuthService } from "@/services/supabase/student-auth";
 
 export default function StudentLoginPage() {
   const navigate = useNavigate();
-  const { signInAsStudent } = useAuth();
   const [admissionNumber, setAdmissionNumber] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +27,7 @@ export default function StudentLoginPage() {
         setError(result.reason);
         return;
       }
-      signInAsStudent(result.student);
+      // Session already established by studentAuthService.login
       navigate("/student");
     } finally {
       setWorking(false);

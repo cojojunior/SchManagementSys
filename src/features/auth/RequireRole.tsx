@@ -10,8 +10,16 @@ export function RequireRole({
   roles: Role[];
   children: ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="text-sm text-ink-500">Loading…</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
