@@ -1,5 +1,5 @@
 import type { Invoice, Payment } from "@/types/finance";
-import { invoicesService } from "./invoices";
+import { invoicesService } from "./supabase/invoices";
 
 const delay = (ms = 250) => new Promise((r) => setTimeout(r, ms));
 

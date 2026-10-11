@@ -1,6 +1,9 @@
 import { requireSupabase } from "@/lib/supabase";
+import { pickOne } from "@/lib/pick-one";
 import type { Student, StudentFilters } from "@/types/student";
 import type { Paginated } from "@/types/common";
+
+type Joined<T> = T | T[] | null;
 
 type DbStudent = {
   id: string;
@@ -20,9 +23,20 @@ type DbStudent = {
   status: "active" | "inactive" | "archived";
   created_at: string;
   updated_at: string;
+  classes?: Joined<{ name: string }>;
+  guardians?: Array<{
+    id: string;
+    full_name: string;
+    relationship: "mother" | "father" | "guardian";
+    phone: string;
+    email: string | null;
+    address: string;
+    is_emergency_contact: boolean;
+  }>;
 };
 
 function toDomain(row: DbStudent): Student {
+  const cls = pickOne(row.classes);
   return {
     id: row.id,
     admissionNumber: row.admission_number,
@@ -34,7 +48,7 @@ function toDomain(row: DbStudent): Student {
     nationality: row.nationality,
     division: row.division,
     classId: row.class_id ?? "",
-    className: "", // populated by a join when needed
+    className: cls?.name ?? "",
     academicYear: row.academic_year,
     admissionDate: row.admission_date,
     address: row.address,
@@ -82,19 +96,13 @@ export const studentsService = {
     }
 
     const start = (page - 1) * pageSize;
-    const end = start + pageSize - 1;
-    query = query.range(start, end);
+    query = query.range(start, start + pageSize - 1);
 
     const { data, count, error } = await query;
     if (error) throw new Error(error.message);
 
     return {
-      data: (
-        data as unknown as Array<DbStudent & { classes?: { name: string } }>
-      ).map((row) => ({
-        ...toDomain(row),
-        className: row.classes?.name ?? "",
-      })),
+      data: (data as unknown as DbStudent[]).map(toDomain),
       total: count ?? 0,
       page,
       pageSize,
@@ -111,21 +119,8 @@ export const studentsService = {
     if (error) throw new Error(error.message);
     if (!data) return null;
 
-    const row = data as unknown as DbStudent & {
-      classes?: { name: string };
-      guardians?: Array<{
-        id: string;
-        full_name: string;
-        relationship: "mother" | "father" | "guardian";
-        phone: string;
-        email: string | null;
-        address: string;
-        is_emergency_contact: boolean;
-      }>;
-    };
-
+    const row = data as unknown as DbStudent;
     const student = toDomain(row);
-    student.className = row.classes?.name ?? "";
     const g = row.guardians?.[0];
     if (g) {
       student.guardian = {
@@ -145,12 +140,11 @@ export const studentsService = {
     const supabase = requireSupabase();
     const { data, error } = await supabase
       .from("students")
-      .select("*")
+      .select("*, classes(name)")
       .ilike("admission_number", admissionNumber)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!data) return null;
-    return toDomain(data as unknown as DbStudent);
+    return data ? toDomain(data as unknown as DbStudent) : null;
   },
 
   async create(values: {
@@ -177,7 +171,6 @@ export const studentsService = {
   }): Promise<Student> {
     const supabase = requireSupabase();
 
-    // Generate an admission number
     const { count } = await supabase
       .from("students")
       .select("*", { count: "exact", head: true });
@@ -208,7 +201,6 @@ export const studentsService = {
 
     if (error) throw new Error(error.message);
 
-    // Insert the guardian
     await supabase.from("guardians").insert({
       student_id: data.id,
       full_name: values.guardian.fullName,
@@ -273,7 +265,7 @@ export const studentsService = {
         ...(values.status !== undefined && { status: values.status }),
       })
       .eq("id", id)
-      .select("*")
+      .select("*, classes(name)")
       .single();
     if (error) throw new Error(error.message);
     return toDomain(data as unknown as DbStudent);

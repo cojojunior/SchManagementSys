@@ -1,10 +1,9 @@
 import type { ReportCardData, ReportCardSubjectRow } from "@/types/report-card";
-import { studentsService } from "./students";
-import { assessmentsService } from "./assessments";
-import { scoresService } from "./scores";
-import { academicYearsService } from "./academic-years";
-
-const delay = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+import { studentsService } from "./supabase/students";
+import { assessmentsService } from "./supabase/assessments";
+import { scoresService } from "./supabase/scores";
+import { academicYearsService } from "./supabase/academic-years";
+import { remarksService } from "./supabase/remarks";
 
 const SCHOOL = {
   name: "Supreme Academy",
@@ -18,8 +17,6 @@ export const reportCardService = {
     studentId: string,
     termId: string,
   ): Promise<ReportCardData | null> {
-    await delay(400);
-
     const student = await studentsService.get(studentId);
     if (!student) return null;
 
@@ -29,8 +26,8 @@ export const reportCardService = {
     const year = await academicYearsService.getYear(term.academicYearId);
     const academicYear = year?.name ?? "—";
 
-    // All assessments for this class + term in the given academic year
-    const assessments = await assessmentsService.list(
+    // Load assessments + scores + remarks in parallel
+    const assessmentsRes = await assessmentsService.list(
       {
         classId: student.classId,
         termId,
@@ -40,12 +37,15 @@ export const reportCardService = {
       200,
     );
 
-    // Scores for all those assessments in one shot
-    const assessmentIds = assessments.data.map((a) => a.id);
-    const allScores = await scoresService.listByAssessmentIds(assessmentIds);
+    const assessmentIds = assessmentsRes.data.map((a) => a.id);
+
+    const [allScores, remarks] = await Promise.all([
+      scoresService.listByAssessmentIds(assessmentIds),
+      remarksService.get(studentId, termId),
+    ]);
 
     // For each assessment, find this student's score
-    const rows: ReportCardSubjectRow[] = assessments.data.map((a) => {
+    const rows: ReportCardSubjectRow[] = assessmentsRes.data.map((a) => {
       const sc = allScores.find(
         (s) => s.assessmentId === a.id && s.studentId === studentId,
       );
@@ -72,21 +72,19 @@ export const reportCardService = {
         ? 0
         : Math.round((totalScore / scored.length) * 10) / 10;
 
-    // Class position — compute total scores for every student in the class
+    // Class position — aggregate scores per student
     const roster = await studentsService.list(
       { classId: student.classId, status: "active" },
       1,
       200,
     );
 
-    const studentTotals = await Promise.all(
-      roster.data.map(async (st) => {
-        const total = allScores
-          .filter((s) => s.studentId === st.id)
-          .reduce((sum, s) => sum + s.finalScore, 0);
-        return { id: st.id, total };
-      }),
-    );
+    const studentTotals = roster.data.map((st) => {
+      const total = allScores
+        .filter((s) => s.studentId === st.id)
+        .reduce((sum, s) => sum + s.finalScore, 0);
+      return { id: st.id, total };
+    });
 
     const sorted = [...studentTotals].sort((a, b) => b.total - a.total);
     const position =
@@ -118,9 +116,9 @@ export const reportCardService = {
         position,
         classSize,
       },
-      teacherRemark: undefined,
-      headmasterRemark: undefined,
-      published: true, // demo: treat as published
+      teacherRemark: remarks?.teacherRemark,
+      headmasterRemark: remarks?.headmasterRemark,
+      published: true,
       school: SCHOOL,
     };
   },
