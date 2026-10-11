@@ -6,7 +6,6 @@ import type {
   ScratchCardStatus,
   ScratchCardUsage,
 } from "@/types/scratch-card";
-import { SCRATCH_CARD_PRICES } from "@/types/scratch-card";
 import type { Paginated } from "@/types/common";
 
 type DbCard = {
