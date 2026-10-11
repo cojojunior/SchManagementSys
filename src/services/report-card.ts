@@ -1,5 +1,5 @@
 import type { ReportCardData, ReportCardSubjectRow } from "@/types/report-card";
-import { studentsService } from "./supabase/students";
+import { studentsService } from "./supabase/student";
 import { assessmentsService } from "./supabase/assessments";
 import { scoresService } from "./supabase/scores";
 import { academicYearsService } from "./supabase/academic-years";
