@@ -19,7 +19,6 @@ type AuthContextValue = {
     password: string,
   ) => Promise<{ ok: boolean; reason?: string }>;
   signOut: () => Promise<void>;
-  /** Only for the current demo/dev flow. Real auth is via signIn. */
   signInAsDemo: (role: Role) => void;
 };
 
@@ -59,10 +58,6 @@ const DEMO_USERS: Record<Role, AuthUser> = {
   },
 };
 
-/**
- * Map a Supabase session → AuthUser.
- * Reads role from app_metadata (server-set, not user-editable).
- */
 function sessionToUser(session: Session | null): AuthUser | null {
   if (!session?.user) return null;
   const user = session.user;
@@ -75,7 +70,6 @@ function sessionToUser(session: Session | null): AuthUser | null {
       user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User",
     role,
     studentId: meta.student_id as string | undefined,
-    // Populated separately from profiles table
     mustChangePassword: false,
   };
 }
@@ -101,14 +95,24 @@ async function loadProfile(userId: string): Promise<{
   };
 }
 
+async function enrichUser(base: AuthUser): Promise<AuthUser> {
+  const profile = await loadProfile(base.id);
+  if (!profile) return base;
+  return {
+    ...base,
+    fullName: profile.fullName || base.fullName,
+    role: profile.role || base.role,
+    studentId: profile.studentId || base.studentId,
+    mustChangePassword: profile.mustChangePassword,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Subscribe to Supabase auth state
   useEffect(() => {
     if (!supabase) {
-      // Supabase not configured — fall back to demo mode
       setLoading(false);
       return;
     }
@@ -116,17 +120,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     // Initial session read
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled) return;
-      setUser(sessionToUser(data.session));
-      setLoading(false);
+      const base = sessionToUser(data.session);
+      if (!base) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      const enriched = await enrichUser(base);
+      if (!cancelled) {
+        setUser(enriched);
+        setLoading(false);
+      }
     });
 
     // Live updates
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(sessionToUser(session));
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (cancelled) return;
+      const base = sessionToUser(session);
+      if (!base) {
+        setUser(null);
+        return;
+      }
+      const enriched = await enrichUser(base);
+      if (!cancelled) setUser(enriched);
     });
 
     return () => {

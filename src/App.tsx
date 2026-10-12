@@ -61,7 +61,6 @@ import PrivacyPage from "@/pages/legal/PrivacyPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 
-
 export default function App() {
   return (
     <AuthProvider>
@@ -70,6 +69,7 @@ export default function App() {
         <Route path="/login" element={<StaffLoginPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />
         <Route path="/student/activate" element={<StudentActivatePage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/" element={<LandingPage />} />
@@ -920,7 +920,7 @@ export default function App() {
             }
           />
 
-          {/* ============ Audit Log ============ */}
+          {/* Audit Log */}
           <Route
             path="/admin/audit"
             element={
@@ -930,7 +930,7 @@ export default function App() {
             }
           />
 
-          {/* ============ Reports ============ */}
+          {/* Reports */}
           <Route
             path="/admin/reports"
             element={
@@ -964,7 +964,7 @@ export default function App() {
             }
           />
 
-          {/* ============ Settings ============ */}
+          {/* Settings */}
           <Route
             path="/admin/settings"
             element={
@@ -1051,9 +1051,6 @@ export default function App() {
           />
         </Route>
 
-        <Route path="/change-password" element={<ChangePasswordPage />} />
-
-        <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>

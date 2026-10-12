@@ -171,12 +171,16 @@ export const studentsService = {
   }): Promise<Student> {
     const supabase = requireSupabase();
 
-    const { count } = await supabase
-      .from("students")
-      .select("*", { count: "exact", head: true });
-    const next = (count ?? 0) + 1;
-    const year = new Date().getFullYear();
-    const admissionNumber = `SA-${year}-${String(next).padStart(4, "0")}`;
+    // Server-side generated admission number (SUAC###)
+    const { data: numberData, error: numberError } = await supabase.rpc(
+      "next_admission_number",
+    );
+    if (numberError || !numberData) {
+      throw new Error(
+        numberError?.message ?? "Could not generate admission number",
+      );
+    }
+    const admissionNumber = numberData as string;
 
     const { data, error } = await supabase
       .from("students")
