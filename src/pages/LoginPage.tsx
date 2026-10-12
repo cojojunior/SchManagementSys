@@ -100,6 +100,15 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
+          <div className="text-center text-xs text-ink-500 pt-4 border-t border-ink-200 flex items-center justify-center gap-3">
+            <Link to="/terms" className="hover:text-ink-700">
+              Terms & Conditions
+            </Link>
+            <span className="text-ink-300">·</span>
+            <Link to="/privacy" className="hover:text-ink-700">
+              Privacy Policy
+            </Link>
+          </div>
         </CardBody>
       </Card>
     </div>
