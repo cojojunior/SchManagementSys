@@ -56,6 +56,9 @@ import ReportsPage from "@/features/reports/ReportsPage";
 import SettingsPage from "@/features/settings/SettingsPage";
 import StudentActivatePage from "@/features/student-portal/StudentActivatePage";
 import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
+import TermsPage from "@/pages/legal/TermsPage";
+import PrivacyPage from "@/pages/legal/PrivacyPage";
+
 
 export default function App() {
   return (
@@ -65,6 +68,8 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />
         <Route path="/student/activate" element={<StudentActivatePage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
 
         {/* ============ Authenticated shell ============ */}
         <Route
@@ -965,7 +970,6 @@ export default function App() {
               </RequireRole>
             }
           />
-
 
           {/* Finance Dashboard */}
           <Route
