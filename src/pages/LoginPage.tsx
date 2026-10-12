@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ROLE_HOME, type Role } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
@@ -99,6 +100,14 @@ export default function LoginPage() {
                 Activate account
               </Link>
             </div>
+          </div>
+          <div className="text-center">
+            <Link
+              to="/"
+              className="text-xs text-ink-500 inline-flex items-center gap-1 hover:text-ink-700">
+              <ArrowLeft className="h-3 w-3" />
+              Back to portal
+            </Link>
           </div>
           <div className="text-center text-xs text-ink-500 pt-4 border-t border-ink-200 flex items-center justify-center gap-3">
             <Link to="/terms" className="hover:text-ink-700">

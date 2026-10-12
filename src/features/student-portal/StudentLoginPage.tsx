@@ -92,7 +92,7 @@ export default function StudentLoginPage() {
             </div>
             <div className="text-center">
               <Link
-                to="/login"
+                to="/"
                 className="text-xs text-ink-500 inline-flex items-center gap-1 hover:text-ink-700">
                 <ArrowLeft className="h-3 w-3" />
                 Back to portal
