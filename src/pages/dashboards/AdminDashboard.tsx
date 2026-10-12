@@ -1,4 +1,11 @@
-import { Users, GraduationCap, CreditCard, Ticket } from "lucide-react";
+import {
+  Users,
+  GraduationCap,
+  CreditCard,
+  Ticket,
+  ArrowRight,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import {
@@ -64,12 +71,19 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Config cards */}
-      <div className="mb-3">
+      {/* Config cards header with manage-all link */}
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-ink-700 uppercase tracking-wide">
           School Configuration
         </h2>
+        <Link
+          to="/admin/settings"
+          className="text-xs text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 font-medium">
+          Manage all
+          <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
         <AcademicYearCard summary={summary} basePath="/admin" />
         <AssessmentWeightCard summary={summary} />
