@@ -1,25 +1,45 @@
 import { requireSupabase } from "@/lib/supabase";
 
-export type ActivationResult = { ok: true } | { ok: false; reason: string };
-
 export type StudentLoginResult =
   | { ok: true; studentId: string; fullName: string }
+  | { ok: false; reason: string; needsActivation?: boolean };
+
+export type ActivationVerifyResult =
+  | {
+      ok: true;
+      studentId: string;
+      fullName: string;
+      admissionNumber: string;
+      proof: string;
+    }
   | { ok: false; reason: string };
 
-type ActivateResponse = {
+export type ActivationCompleteResult =
+  { ok: true } | { ok: false; reason: string };
+
+type VerifyLoginResponse = {
   ok: boolean;
   reason?: string;
+  needs_activation?: boolean;
   studentId?: string;
-  email?: string;
-  password?: string;
+  proof?: string;
   fullName?: string;
 };
 
-type VerifyResponse = {
+type VerifyActivationResponse = {
   ok: boolean;
   reason?: string;
   studentId?: string;
+  fullName?: string;
+  admissionNumber?: string;
   proof?: string;
+};
+
+type SetCodeResponse = {
+  ok: boolean;
+  reason?: string;
+  email?: string;
+  password?: string;
 };
 
 type MintResponse = {
@@ -32,61 +52,33 @@ type MintResponse = {
 
 export const studentAuthService = {
   /**
-   * Full activation flow: verify + create user + set PIN, all in one call.
+   * Student login: admission number + 4-digit code.
    * Signs the student in on success.
-   */
-  async activate(
-    admissionNumber: string,
-    dateOfBirth: string,
-    pin: string,
-  ): Promise<ActivationResult> {
-    const supabase = requireSupabase();
-
-    const { data, error } = await supabase.functions.invoke<ActivateResponse>(
-      "activate-and-mint-student",
-      {
-        body: { admissionNumber, dateOfBirth, pin },
-      },
-    );
-
-    if (error) {
-      return { ok: false, reason: error.message };
-    }
-    if (!data?.ok) {
-      return { ok: false, reason: data?.reason ?? "Activation failed" };
-    }
-
-    // Sign in with the minted credentials
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: data.email!,
-      password: data.password!,
-    });
-
-    if (signInError) {
-      return { ok: false, reason: signInError.message };
-    }
-
-    return { ok: true };
-  },
-
-  /**
-   * Sign in: admission + PIN. The Edge Function verifies the PIN and returns
-   * a short-lived proof; we then exchange it for a real session.
    */
   async login(
     admissionNumber: string,
-    pin: string,
+    code: string,
   ): Promise<StudentLoginResult> {
     const supabase = requireSupabase();
 
-    const { data, error } = await supabase.functions.invoke<VerifyResponse>(
-      "verify-student-pin",
-      { body: { admissionNumber, pin } },
-    );
+    const { data, error } =
+      await supabase.functions.invoke<VerifyLoginResponse>(
+        "verify-student-login",
+        {
+          body: {
+            admissionNumber: admissionNumber.trim().toUpperCase(),
+            code,
+          },
+        },
+      );
 
     if (error) return { ok: false, reason: error.message };
-    if (!data?.ok || !data.studentId || !data.proof) {
-      return { ok: false, reason: data?.reason ?? "Invalid credentials" };
+    if (!data?.ok) {
+      return {
+        ok: false,
+        reason: data?.reason ?? "Invalid admission number or code.",
+        needsActivation: data?.needs_activation,
+      };
     }
 
     const { data: minted, error: mintError } =
@@ -95,7 +87,10 @@ export const studentAuthService = {
       });
 
     if (mintError || !minted?.ok) {
-      return { ok: false, reason: minted?.reason ?? "Could not start session" };
+      return {
+        ok: false,
+        reason: minted?.reason ?? "Could not start session.",
+      };
     }
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -107,9 +102,76 @@ export const studentAuthService = {
 
     return {
       ok: true,
-      studentId: data.studentId,
-      fullName: minted.fullName ?? "",
+      studentId: data.studentId!,
+      fullName: data.fullName ?? "",
     };
+  },
+
+  /**
+   * Activation step 1: verify admission number + date of birth.
+   */
+  async verifyActivation(
+    admissionNumber: string,
+    dateOfBirth: string,
+  ): Promise<ActivationVerifyResult> {
+    const supabase = requireSupabase();
+
+    const { data, error } =
+      await supabase.functions.invoke<VerifyActivationResponse>(
+        "student-activate-verify",
+        {
+          body: {
+            admissionNumber: admissionNumber.trim().toUpperCase(),
+            dateOfBirth,
+          },
+        },
+      );
+
+    if (error) return { ok: false, reason: error.message };
+    if (!data?.ok) {
+      return { ok: false, reason: data?.reason ?? "Verification failed." };
+    }
+
+    return {
+      ok: true,
+      studentId: data.studentId!,
+      fullName: data.fullName ?? "",
+      admissionNumber: data.admissionNumber ?? admissionNumber,
+      proof: data.proof!,
+    };
+  },
+
+  /**
+   * Activation step 2: set the 4-digit code.
+   * Signs the student in on success.
+   */
+  async completeActivation(
+    studentId: string,
+    proof: string,
+    code: string,
+  ): Promise<ActivationCompleteResult> {
+    const supabase = requireSupabase();
+
+    const { data, error } = await supabase.functions.invoke<SetCodeResponse>(
+      "student-activate-set-code",
+      {
+        body: { studentId, proof, code },
+      },
+    );
+
+    if (error) return { ok: false, reason: error.message };
+    if (!data?.ok) {
+      return { ok: false, reason: data?.reason ?? "Could not set code." };
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email!,
+      password: data.password!,
+    });
+
+    if (signInError) return { ok: false, reason: signInError.message };
+
+    return { ok: true };
   },
 
   async signOut(): Promise<void> {

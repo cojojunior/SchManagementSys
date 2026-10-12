@@ -10,7 +10,7 @@ import { studentAuthService } from "@/services/supabase/student-auth";
 export default function StudentLoginPage() {
   const navigate = useNavigate();
   const [admissionNumber, setAdmissionNumber] = useState("");
-  const [pin, setPin] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
 
@@ -20,15 +20,22 @@ export default function StudentLoginPage() {
     setError(null);
     try {
       const result = await studentAuthService.login(
-        admissionNumber.trim(),
-        pin,
+        admissionNumber.trim().toUpperCase(),
+        code,
       );
+
       if (!result.ok) {
+        if (result.needsActivation) {
+          setError(
+            "This account hasn't been activated yet. Please activate it first.",
+          );
+          return;
+        }
         setError(result.reason);
         return;
       }
-      // Session already established by studentAuthService.login
-      navigate("/student");
+
+      navigate("/student", { replace: true });
     } finally {
       setWorking(false);
     }
@@ -44,27 +51,35 @@ export default function StudentLoginPage() {
             </div>
             <h1 className="mt-3 text-xl font-semibold">Student Sign In</h1>
             <p className="text-sm text-ink-500 mt-1">
-              Enter your admission number and PIN
+              Your admission number + 4-digit code
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField label="Admission number" required>
+            <FormField label="Admission number" required hint="e.g. SUAC001">
               <Input
                 value={admissionNumber}
-                onChange={(e) => setAdmissionNumber(e.target.value)}
-                placeholder="SA-2024-0001"
-                autoComplete="off"
+                onChange={(e) =>
+                  setAdmissionNumber(e.target.value.toUpperCase())
+                }
+                placeholder="SUAC001"
+                autoComplete="username"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                className="font-mono uppercase"
               />
             </FormField>
-            <FormField label="4-digit PIN" required>
+
+            <FormField label="4-digit code" required>
               <Input
                 type="password"
                 inputMode="numeric"
                 maxLength={4}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                 className="font-mono text-2xl tracking-widest text-center"
+                autoComplete="current-password"
               />
             </FormField>
 
@@ -78,7 +93,7 @@ export default function StudentLoginPage() {
               type="submit"
               className="w-full"
               size="lg"
-              disabled={working || !admissionNumber || pin.length !== 4}>
+              disabled={working || !admissionNumber || code.length !== 4}>
               {working ? "Signing in…" : "Sign in"}
             </Button>
 

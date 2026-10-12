@@ -71,6 +71,7 @@ export default function App() {
         <Route path="/student/activate" element={<StudentActivatePage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/" element={<LandingPage />} />
 
         {/* ============ Authenticated shell ============ */}
         <Route
