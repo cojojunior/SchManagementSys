@@ -102,6 +102,7 @@ const NAV: Record<Role, NavItem[]> = {
     },
     { to: "/teacher/results", label: "Results", icon: ClipboardCheck },
     { to: "/teacher/assessments", label: "Assessments", icon: FileSpreadsheet },
+    { to: "/teacher/reports", label: "Reports", icon: BarChart3 },
     { to: "/teacher/classes", label: "My Classes", icon: School },
   ],
 
@@ -127,7 +128,9 @@ const NAV: Record<Role, NavItem[]> = {
     },
     { to: "/secretary/finance", label: "Finance", icon: CreditCard },
     { to: "/secretary/scratch-cards", label: "Scratch Cards", icon: Ticket },
+    { to: "/secretary/reports", label: "Reports", icon: BarChart3 },
   ],
+
   student: [
     { to: "/student", label: "Dashboard", icon: LayoutDashboard },
     { to: "/student/results", label: "My Results", icon: ClipboardList },

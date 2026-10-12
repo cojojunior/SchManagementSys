@@ -51,6 +51,9 @@ import ScratchCardGeneratePage from "@/features/scratch-cards/ScratchCardGenerat
 import StudentResultsPage from "@/features/student-portal/StudentResultPage";
 import StudentReportPage from "@/features/student-portal/StudentReportPage";
 import StudentFeesPage from "@/features/student-portal/StudentFeesPage";
+import AuditLogPage from "@/features/audit/AuditLogPage";
+import ReportsPage from "@/features/reports/ReportsPage";
+import SettingsPage from "@/features/settings/SettingsPage";
 import StudentActivatePage from "@/features/student-portal/StudentActivatePage";
 import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
 
@@ -908,6 +911,61 @@ export default function App() {
               </RequireRole>
             }
           />
+
+          {/* ============ Audit Log ============ */}
+          <Route
+            path="/admin/audit"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <AuditLogPage />
+              </RequireRole>
+            }
+          />
+
+          {/* ============ Reports ============ */}
+          <Route
+            path="/admin/reports"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <ReportsPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/headmaster/reports"
+            element={
+              <RequireRole roles={["headmaster"]}>
+                <ReportsPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/secretary/reports"
+            element={
+              <RequireRole roles={["secretary"]}>
+                <ReportsPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/teacher/reports"
+            element={
+              <RequireRole roles={["teacher"]}>
+                <ReportsPage />
+              </RequireRole>
+            }
+          />
+
+          {/* ============ Settings ============ */}
+          <Route
+            path="/admin/settings"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <SettingsPage />
+              </RequireRole>
+            }
+          />
+
 
           {/* Finance Dashboard */}
           <Route

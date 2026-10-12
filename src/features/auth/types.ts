@@ -5,5 +5,6 @@ export type AuthUser = {
   email: string;
   fullName: string;
   role: Role;
-  studentId?: string; // only for students
+  studentId?: string;
+  staffId?: string;
 };
