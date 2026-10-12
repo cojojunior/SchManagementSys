@@ -7,4 +7,5 @@ export type AuthUser = {
   role: Role;
   studentId?: string;
   staffId?: string;
+  mustChangePassword?: boolean;
 };

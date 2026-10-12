@@ -59,6 +59,7 @@ import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
 import TermsPage from "@/pages/legal/TermsPage";
 import PrivacyPage from "@/pages/legal/PrivacyPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
+import ChangePasswordPage from "@/pages/ChangePasswordPage";
 
 
 export default function App() {
@@ -1049,6 +1050,8 @@ export default function App() {
             }
           />
         </Route>
+
+        <Route path="/change-password" element={<ChangePasswordPage />} />
 
         <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<NotFoundPage />} />

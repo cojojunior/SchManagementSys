@@ -24,6 +24,12 @@ export function RequireRole({
   if (!user) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
+
+  // Force password change before any other route
+  if (user.mustChangePassword && location.pathname !== "/change-password") {
+    return <Navigate to="/change-password" replace />;
+  }
+
   if (!roles.includes(user.role)) {
     return <Navigate to={ROLE_HOME[user.role]} replace />;
   }

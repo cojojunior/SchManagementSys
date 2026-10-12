@@ -75,6 +75,29 @@ function sessionToUser(session: Session | null): AuthUser | null {
       user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User",
     role,
     studentId: meta.student_id as string | undefined,
+    // Populated separately from profiles table
+    mustChangePassword: false,
+  };
+}
+
+async function loadProfile(userId: string): Promise<{
+  fullName: string;
+  role: Role;
+  studentId?: string;
+  mustChangePassword: boolean;
+} | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("full_name, role, student_id, must_change_password")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return {
+    fullName: data.full_name,
+    role: data.role as Role,
+    studentId: data.student_id ?? undefined,
+    mustChangePassword: data.must_change_password ?? false,
   };
 }
 
