@@ -2,7 +2,6 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { RequireRole } from "@/features/auth/RequireRole";
 import { AppShell } from "@/layouts/AppShell";
-import LoginPage from "@/pages/LoginPage";
 import LandingPage from "@/pages/LandingPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import AdminDashboard from "@/pages/dashboards/AdminDashboard";
@@ -59,6 +58,7 @@ import StudentActivatePage from "@/features/student-portal/StudentActivatePage";
 import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
 import TermsPage from "@/pages/legal/TermsPage";
 import PrivacyPage from "@/pages/legal/PrivacyPage";
+import StaffLoginPage from "@/pages/StaffLoginPage";
 
 
 export default function App() {
@@ -66,7 +66,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         {/* ============ Public routes ============ */}
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<StaffLoginPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />
         <Route path="/student/activate" element={<StudentActivatePage />} />
         <Route path="/terms" element={<TermsPage />} />
