@@ -32,6 +32,7 @@ export default function UserFormPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       role: "teacher",
+      password: "Password1",
     },
   });
 
