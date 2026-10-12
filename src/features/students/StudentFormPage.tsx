@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),

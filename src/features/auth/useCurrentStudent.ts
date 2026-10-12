@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 import type { Student } from "@/types/student";
 
 export function useCurrentStudent() {

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 import type { Student } from "@/types/student";
 import { formatDate } from "@/lib/format";
 

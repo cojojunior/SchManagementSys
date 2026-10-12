@@ -65,13 +65,13 @@ export default function ResultReviewPage() {
     if (!confirmAction || !user || !result) return;
     setWorking(true);
     try {
-      if (confirmAction === "approve") {
-        await resultsService.approve(result.assessmentId, user.fullName);
-      } else if (confirmAction === "publish") {
-        await resultsService.publish(result.assessmentId, user.fullName);
-      } else if (confirmAction === "lock") {
-        await resultsService.lock(result.assessmentId, user.fullName);
-      }
+ if (confirmAction === "approve") {
+   await resultsService.approve(result.assessmentId);
+ } else if (confirmAction === "publish") {
+   await resultsService.publish(result.assessmentId);
+ } else if (confirmAction === "lock") {
+   await resultsService.lock(result.assessmentId);
+ }
       setConfirmAction(null);
       await reload();
     } finally {
@@ -83,11 +83,10 @@ export default function ResultReviewPage() {
     if (!user || !result) return;
     setWorking(true);
     try {
-      await resultsService.returnForCorrection(
-        result.assessmentId,
-        user.fullName,
-        returnReason || "Returned for correction",
-      );
+    await resultsService.returnForCorrection(
+      result.assessmentId,
+      returnReason || "Returned for correction",
+    );
       setReturnOpen(false);
       setReturnReason("");
       await reload();

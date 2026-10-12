@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import { useLookup } from "@/hooks/useLookup";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 import { classesService } from "@/services/supabase/classes";
 import { academicYearsService } from "@/services/supabase/academic-years";
 import { invoicesService } from "@/services/supabase/invoices";

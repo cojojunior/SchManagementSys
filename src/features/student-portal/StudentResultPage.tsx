@@ -50,7 +50,7 @@ export default function StudentResultsPage() {
     setVerifying(true);
     setError(null);
     try {
-      const result = await scratchCardsService.redeem(pin, student.id);
+      const result = await scratchCardsService.redeem(pin, student.id, termId);
       if (!result.ok) {
         setError(
           result.reason ??

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/features/auth/AuthContext";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 import { academicYearsService } from "@/services/supabase/academic-years";
 import { remarksService } from "@/services/supabase/remarks";
 import type { Student } from "@/types/student";

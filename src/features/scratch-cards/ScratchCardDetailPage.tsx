@@ -14,7 +14,7 @@ import { RoleGate } from "@/features/auth/RoleGate";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useLookup } from "@/hooks/useLookup";
 import { scratchCardsService } from "@/services/supabase/scratch-cards";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 import type { ScratchCard, ScratchCardUsage } from "@/types/scratch-card";
 import { formatCurrency, formatDate } from "@/lib/format";
 

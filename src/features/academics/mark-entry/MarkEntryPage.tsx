@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { assessmentsService } from "@/services/supabase/assessments";
-import { studentsService } from "@/services/supabase/students";
+import { studentsService } from "@/services/supabase/student";
 import { classesService } from "@/services/supabase/classes";
 import { gradingService } from "@/services/supabase/grading";
 import { assessmentWeightService } from "@/services/supabase/assessment-weight";
