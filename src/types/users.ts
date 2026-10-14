@@ -28,6 +28,7 @@ export type ProvisionUserValues = {
   password: string;
   fullName: string;
   role: "headmaster" | "teacher" | "secretary";
+  staffId?: string;
 };
 
 export type RoleChangeLogEntry = {

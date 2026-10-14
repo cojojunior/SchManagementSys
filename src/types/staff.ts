@@ -1,34 +1,37 @@
 import type { UUID, Status } from "./common";
-import type { Role } from "@/lib/constants";
 
 export type StaffCategory = "teaching" | "non_teaching";
 
 export type EmploymentStatus = "full_time" | "part_time" | "contract";
 
+export type StaffSystemRole = "headmaster" | "teacher" | "secretary";
+
 export type Staff = {
   id: UUID;
-  staffId: string; // e.g. "SA-STF-0001"
+  staffId: string; // e.g. "TCH001"
   firstName: string;
   lastName: string;
   otherNames?: string;
-  dateOfBirth: string; // ISO date
+  dateOfBirth: string;
   gender: "male" | "female";
   phone: string;
   email: string;
   address: string;
 
   category: StaffCategory;
-  department?: string; // e.g. "Mathematics", "Administration"
-  jobTitle: string; // e.g. "Mathematics Teacher", "Bursar"
+  department?: string;
+  jobTitle: string;
   employmentStatus: EmploymentStatus;
-  dateHired: string; // ISO date
-
-  qualification?: string; // e.g. "B.Ed Mathematics"
+  dateHired: string;
+  qualification?: string;
   photoUrl?: string;
 
-  // Portal access
-  systemRole?: Role | null; // null = no portal access
-  accountStatus: Status; // active / inactive / archived
+  // Portal access (mirrored from the linked profile if one exists)
+  systemRole?: StaffSystemRole | null;
+  accountStatus: Status;
+
+  // Set when this staff member has a linked login
+  loginUserId?: UUID;
 
   createdAt: string;
   updatedAt: string;
@@ -49,8 +52,15 @@ export type StaffFormValues = {
   employmentStatus: EmploymentStatus;
   dateHired: string;
   qualification?: string;
-  systemRole?: Role | null;
+  systemRole?: StaffSystemRole | null;
   accountStatus: Status;
+};
+
+/** Returned by staffService.create() — includes the login result if one was made */
+export type StaffCreateResult = {
+  staff: Staff;
+  loginCreated: boolean;
+  loginEmail?: string;
 };
 
 export type StaffFilters = {

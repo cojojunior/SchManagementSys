@@ -1,14 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Trash2, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Pencil,
+  Trash2,
+  User,
+  ShieldCheck,
+  RotateCcw,
+  UserPlus,
+} from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Dialog } from "@/components/ui/Dialog";
+import { SuccessDialog } from "@/components/ui/SuccessDialog";
+import { FormField } from "@/components/ui/FormField";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { staffService } from "@/services/supabase/staff";
+import { usersService } from "@/services/supabase/users";
 import type { Staff } from "@/types/staff";
 import { ROLE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
@@ -19,6 +32,8 @@ const EMPLOYMENT_LABELS: Record<string, string> = {
   contract: "Contract",
 };
 
+type StaffRole = "headmaster" | "teacher" | "secretary";
+
 export default function StaffDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -27,12 +42,28 @@ export default function StaffDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  const [accessOpen, setAccessOpen] = useState(false);
+  const [accessRole, setAccessRole] = useState<StaffRole>("teacher");
+  const [accessWorking, setAccessWorking] = useState(false);
+
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetWorking, setResetWorking] = useState(false);
+
+  const [success, setSuccess] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
+
+  async function reload() {
     setLoading(true);
-    staffService.get(id).then((s) => {
-      setStaff(s);
-      setLoading(false);
-    });
+    const s = await staffService.get(id);
+    setStaff(s);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    void reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function handleDelete() {
@@ -42,6 +73,47 @@ export default function StaffDetailPage() {
       navigate(-1);
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleGiveAccess() {
+    if (!staff) return;
+    setAccessWorking(true);
+    try {
+      await usersService.provisionUser({
+        fullName: `${staff.firstName} ${staff.lastName}`,
+        email: staff.email.toLowerCase().trim(),
+        password: "Password1",
+        role: accessRole,
+        staffId: staff.id,
+      });
+      setAccessOpen(false);
+      setSuccess({
+        title: "Portal access created",
+        message: `${staff.firstName} ${staff.lastName} can now sign in with ${staff.email} using Password1 as the temporary password.`,
+      });
+      await reload();
+    } catch (e) {
+      // Show error inline in the dialog
+      setAccessWorking(false);
+      throw e;
+    } finally {
+      setAccessWorking(false);
+    }
+  }
+
+  async function handleResetPassword() {
+    if (!staff?.loginUserId) return;
+    setResetWorking(true);
+    try {
+      await usersService.resetToDefault(staff.loginUserId);
+      setResetOpen(false);
+      setSuccess({
+        title: "Password reset",
+        message: `${staff.firstName}'s password has been reset to Password1. They will be prompted to set a new one on their next login.`,
+      });
+    } finally {
+      setResetWorking(false);
     }
   }
 
@@ -59,6 +131,8 @@ export default function StaffDetailPage() {
       />
     );
   }
+
+  const hasLogin = Boolean(staff.loginUserId);
 
   return (
     <>
@@ -112,28 +186,108 @@ export default function StaffDetailPage() {
           </CardBody>
         </Card>
 
+        {/* Portal access card — the one that does the real work */}
         <Card>
-          <CardHeader title="Portal access" />
+          <CardHeader
+            title={
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-brand-600" />
+                <span>Portal access</span>
+              </div>
+            }
+          />
           <CardBody className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-brand-50 text-brand-700 grid place-items-center">
-                <User className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-medium text-ink-900">
-                  {staff.systemRole
-                    ? ROLE_LABELS[staff.systemRole]
-                    : "No portal access"}
+            {hasLogin ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-700 grid place-items-center">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-ink-900 truncate">
+                      {staff.systemRole
+                        ? ROLE_LABELS[staff.systemRole]
+                        : "Login active"}
+                    </div>
+                    <div className="text-xs text-ink-500 truncate">
+                      {staff.email}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-ink-500">
-                  Account status: {staff.accountStatus}
+
+                <div className="flex items-center gap-2">
+                  <Badge tone="success">Login active</Badge>
+                  <Badge
+                    tone={
+                      staff.accountStatus === "active" ? "success" : "neutral"
+                    }>
+                    {staff.accountStatus}
+                  </Badge>
                 </div>
-              </div>
-            </div>
-            <p className="text-xs text-ink-500">
-              Role assignment and account provisioning are managed by the Super
-              Admin in the Users &amp; Roles module (later phase).
-            </p>
+
+                <RoleGate resource="users" action="update">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setResetOpen(true)}>
+                    <RotateCcw className="h-4 w-4" />
+                    Reset password
+                  </Button>
+                </RoleGate>
+
+                <p className="text-xs text-ink-500">
+                  The user signs in at <code className="font-mono">/login</code>{" "}
+                  with their email. Password resets to{" "}
+                  <code className="font-mono">Password1</code> and they must
+                  change it on next login.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-ink-100 text-ink-500 grid place-items-center">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-ink-900">No login yet</div>
+                    <div className="text-xs text-ink-500">
+                      This staff member cannot sign in
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-ink-500">
+                  Give {staff.firstName} access to the portal. They&apos;ll sign
+                  in with <strong>{staff.email}</strong> using{" "}
+                  <code className="font-mono">Password1</code> and must change
+                  it on first login.
+                </p>
+
+                <RoleGate resource="users" action="create">
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      // Pre-select a sensible default based on job title
+                      const t = staff.jobTitle.toLowerCase();
+                      if (
+                        t.includes("headmaster") ||
+                        t.includes("head master")
+                      ) {
+                        setAccessRole("headmaster");
+                      } else if (t.includes("secretary")) {
+                        setAccessRole("secretary");
+                      } else {
+                        setAccessRole("teacher");
+                      }
+                      setAccessOpen(true);
+                    }}>
+                    <UserPlus className="h-4 w-4" />
+                    Give portal access
+                  </Button>
+                </RoleGate>
+              </>
+            )}
           </CardBody>
         </Card>
 
@@ -157,13 +311,6 @@ export default function StaffDetailPage() {
             />
             <Field label="Date hired" value={formatDate(staff.dateHired)} />
             <Field label="Qualification" value={staff.qualification ?? "—"} />
-            <div className="sm:col-span-3">
-              <div className="text-xs text-ink-500 mb-1">Account status</div>
-              <Badge
-                tone={staff.accountStatus === "active" ? "success" : "neutral"}>
-                {staff.accountStatus}
-              </Badge>
-            </div>
           </CardBody>
         </Card>
       </div>
@@ -174,9 +321,75 @@ export default function StaffDetailPage() {
         onConfirm={handleDelete}
         loading={deleting}
         title="Delete staff member?"
-        message="In production this is a soft-archive. Historical teaching assignments and results tied to this staff member are preserved."
+        message="Historical teaching assignments and results tied to this staff member are preserved."
         confirmLabel="Delete"
         danger
+      />
+
+      {/* Give portal access dialog */}
+      <Dialog
+        open={accessOpen}
+        onClose={() => setAccessOpen(false)}
+        title="Give portal access"
+        description={`${staff.firstName} will sign in with ${staff.email}`}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setAccessOpen(false)}
+              disabled={accessWorking}>
+              Cancel
+            </Button>
+            <Button onClick={handleGiveAccess} disabled={accessWorking}>
+              {accessWorking ? "Creating…" : "Create login"}
+            </Button>
+          </>
+        }>
+        <div className="space-y-4">
+          <FormField label="Role" required>
+            <Select
+              value={accessRole}
+              onChange={(e) => setAccessRole(e.target.value as StaffRole)}>
+              <option value="headmaster">Headmaster</option>
+              <option value="teacher">Teacher</option>
+              <option value="secretary">Secretary</option>
+            </Select>
+          </FormField>
+
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
+            <div>
+              <strong>Login details</strong>
+            </div>
+            <div className="mt-1">
+              Email: <code className="font-mono">{staff.email}</code>
+            </div>
+            <div>
+              Temporary password: <code className="font-mono">Password1</code>
+            </div>
+            <div className="mt-1 text-emerald-700">
+              They must change the password on first login.
+            </div>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Reset password confirmation */}
+      <ConfirmDialog
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onConfirm={handleResetPassword}
+        loading={resetWorking}
+        title="Reset password?"
+        message={`${staff.firstName}'s password will be set to Password1 and they will be forced to choose a new one on their next login.`}
+        confirmLabel="Reset password"
+      />
+
+      {/* Success dialog */}
+      <SuccessDialog
+        open={success !== null}
+        onClose={() => setSuccess(null)}
+        title={success?.title ?? ""}
+        message={success?.message ?? ""}
       />
     </>
   );

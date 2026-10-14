@@ -87,25 +87,46 @@ export const usersService = {
     return data ? toDomain(data as unknown as DbProfile) : null;
   },
 
+  async getByStaffId(staffId: string): Promise<UserProfile | null> {
+    const supabase = requireSupabase();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("staff_id", staffId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? toDomain(data as unknown as DbProfile) : null;
+  },
+
   /**
    * Create a new staff account.
    * Calls the `provision-user` Edge Function which runs with service_role.
+   * Returns userId and the generated internal staffId.
    */
   async provisionUser(
     values: ProvisionUserValues,
-  ): Promise<{ userId: string }> {
+  ): Promise<{ userId: string; staffId: string }> {
     const supabase = requireSupabase();
     const { data, error } = await supabase.functions.invoke<{
       ok: boolean;
       reason?: string;
       userId?: string;
-    }>("provision-user", { body: values });
+      staffId?: string;
+    }>("provision-user", {
+      body: {
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        role: values.role,
+        staffId: values.staffId,
+      },
+    });
 
     if (error) throw new Error(error.message);
-    if (!data?.ok || !data.userId) {
+    if (!data?.ok || !data.userId || !data.staffId) {
       throw new Error(data?.reason ?? "Could not create user");
     }
-    return { userId: data.userId };
+    return { userId: data.userId, staffId: data.staffId };
   },
 
   async setStatus(

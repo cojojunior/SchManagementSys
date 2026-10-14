@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
+import { SuccessDialog } from "@/components/ui/SuccessDialog";
 import { staffService } from "@/services/supabase/staff";
-import { ROLES, ROLE_LABELS } from "@/lib/constants";
 import type { StaffFormValues } from "@/types/staff";
 
-const ROLE_OPTIONS = ["", ...ROLES] as const;
+const STAFF_ROLES = ["", "headmaster", "teacher", "secretary"] as const;
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -34,7 +34,7 @@ const schema = z.object({
   dateHired: z.string().min(1, "Date hired is required"),
   qualification: z.string().optional(),
 
-  systemRole: z.enum(ROLE_OPTIONS),
+  systemRole: z.enum(STAFF_ROLES),
 
   accountStatus: z.enum(["active", "inactive", "archived"]),
 });
@@ -47,6 +47,13 @@ export default function StaffFormPage() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Success dialog state after creating a staff member with a login
+  const [created, setCreated] = useState<{
+    staffId: string;
+    email: string;
+    name: string;
+  } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -88,18 +95,29 @@ export default function StaffFormPage() {
     setSubmitting(true);
     setFormError(null);
     try {
-      // Convert "" → null for the service layer
       const payload: StaffFormValues = {
         ...values,
-        systemRole: values.systemRole === "" ? null : values.systemRole,
+        systemRole:
+          values.systemRole === ""
+            ? null
+            : (values.systemRole as StaffFormValues["systemRole"]),
       };
 
       if (isEdit && id) {
         await staffService.update(id, payload);
+        navigate("..");
       } else {
-        await staffService.create(payload);
+        const result = await staffService.create(payload);
+        if (result.loginCreated) {
+          setCreated({
+            staffId: result.staff.staffId,
+            email: result.loginEmail ?? values.email,
+            name: `${values.firstName} ${values.lastName}`,
+          });
+        } else {
+          navigate("..");
+        }
       }
-      navigate("..");
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -107,8 +125,10 @@ export default function StaffFormPage() {
     }
   }
 
-  const { register, handleSubmit, formState } = form;
+  const { register, handleSubmit, formState, watch } = form;
   const { errors } = formState;
+  const selectedRole = watch("systemRole");
+  const hasPortalAccess = selectedRole !== "";
 
   return (
     <>
@@ -164,7 +184,15 @@ export default function StaffFormPage() {
               <FormField label="Phone" required error={errors.phone?.message}>
                 <Input {...register("phone")} invalid={!!errors.phone} />
               </FormField>
-              <FormField label="Email" required error={errors.email?.message}>
+              <FormField
+                label="Email"
+                required
+                error={errors.email?.message}
+                hint={
+                  hasPortalAccess
+                    ? "This becomes the staff member's login email"
+                    : undefined
+                }>
                 <Input
                   type="email"
                   {...register("email")}
@@ -245,38 +273,70 @@ export default function StaffFormPage() {
 
         <Card>
           <CardBody className="space-y-5">
-            <h3 className="font-semibold text-ink-900">Portal access</h3>
-            <p className="text-xs text-ink-500">
-              Assigning a portal role here is a <strong>request</strong>. Actual
-              account provisioning and role assignment happens through the Super
-              Admin&apos;s Users &amp; Roles module in a later phase. No
-              credentials are created from this form.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                label="System role"
-                error={errors.systemRole?.message}
-                hint="Leave blank for no portal access">
-                <Select {...register("systemRole")}>
-                  <option value="">No portal access</option>
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {ROLE_LABELS[r]}
-                    </option>
-                  ))}
-                </Select>
-              </FormField>
-              <FormField
-                label="Account status"
-                required
-                error={errors.accountStatus?.message}>
-                <Select {...register("accountStatus")}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="archived">Archived</option>
-                </Select>
-              </FormField>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-brand-600" />
+              <h3 className="font-semibold text-ink-900">Portal access</h3>
             </div>
+
+            {isEdit ? (
+              <p className="text-xs text-ink-500">
+                Portal access for existing staff is managed from the staff
+                detail page. Open the detail page and use the{" "}
+                <strong>Portal access</strong> card.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-ink-500">
+                  Selecting a role below will create a login for this staff
+                  member using the email address above. They will receive{" "}
+                  <code className="text-[11px] bg-ink-100 px-1 py-0.5 rounded font-mono">
+                    Password1
+                  </code>{" "}
+                  as a temporary password and must change it on first login.
+                </p>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    label="System role"
+                    error={errors.systemRole?.message}
+                    hint="Leave blank for no portal access">
+                    <Select {...register("systemRole")}>
+                      <option value="">No portal access</option>
+                      <option value="headmaster">Headmaster</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="secretary">Secretary</option>
+                    </Select>
+                  </FormField>
+
+                  <FormField
+                    label="Account status"
+                    required
+                    error={errors.accountStatus?.message}>
+                    <Select {...register("accountStatus")}>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="archived">Archived</option>
+                    </Select>
+                  </FormField>
+                </div>
+
+                {hasPortalAccess && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800 space-y-1">
+                    <div>
+                      <strong>Login will be created</strong> for the email
+                      above.
+                    </div>
+                    <div>
+                      Temporary password:{" "}
+                      <code className="bg-white px-1 rounded font-mono">
+                        Password1
+                      </code>{" "}
+                      — must be changed on first login.
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </CardBody>
         </Card>
 
@@ -303,6 +363,21 @@ export default function StaffFormPage() {
           </Button>
         </div>
       </form>
+
+      <SuccessDialog
+        open={created !== null}
+        onClose={() => {
+          setCreated(null);
+          navigate("..");
+        }}
+        title="Staff member created"
+        message={
+          created
+            ? `${created.name} — ${created.staffId}\n\nLogin: ${created.email}\nTemporary password: Password1\n\nThey must change the password on their first login.`
+            : ""
+        }
+        buttonLabel="Done"
+      />
     </>
   );
 }

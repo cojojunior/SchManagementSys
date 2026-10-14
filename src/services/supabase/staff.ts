@@ -1,5 +1,11 @@
 import { requireSupabase } from "@/lib/supabase";
-import type { Staff, StaffFilters, StaffFormValues } from "@/types/staff";
+import type {
+  Staff,
+  StaffFilters,
+  StaffFormValues,
+  StaffCreateResult,
+  StaffSystemRole,
+} from "@/types/staff";
 import type { Paginated } from "@/types/common";
 
 type DbStaff = {
@@ -25,7 +31,14 @@ type DbStaff = {
   updated_at: string;
 };
 
-function toDomain(row: DbStaff): Staff {
+type DbProfile = {
+  id: string;
+  role: StaffSystemRole;
+  status: "active" | "inactive" | "suspended" | "archived";
+  email: string;
+};
+
+function toDomain(row: DbStaff, profile?: DbProfile | null): Staff {
   return {
     id: row.id,
     staffId: row.staff_id,
@@ -44,18 +57,17 @@ function toDomain(row: DbStaff): Staff {
     dateHired: row.date_hired,
     qualification: row.qualification ?? undefined,
     photoUrl: row.photo_url ?? undefined,
-    systemRole: null,
+    systemRole: profile?.role ?? null,
     accountStatus:
-      row.account_status === "suspended" ? "inactive" : row.account_status,
+      profile?.status === "suspended"
+        ? "inactive"
+        : (profile?.status ?? (row.account_status as Staff["accountStatus"])),
+    loginUserId: profile?.id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
-/**
- * Derive the staff ID prefix from job title + category.
- * Only HEAD, TCH, SEC are allowed by the DB constraint.
- */
 function staffPrefix(
   jobTitle: string,
   category: "teaching" | "non_teaching",
@@ -64,7 +76,7 @@ function staffPrefix(
   if (t.includes("headmaster") || t.includes("head master")) return "HEAD";
   if (t.includes("secretary")) return "SEC";
   if (category === "teaching") return "TCH";
-  return "SEC"; // fallback for other non-teaching staff
+  return "SEC";
 }
 
 export const staffService = {
@@ -102,7 +114,7 @@ export const staffService = {
     if (error) throw new Error(error.message);
 
     return {
-      data: (data as unknown as DbStaff[]).map(toDomain),
+      data: (data as unknown as DbStaff[]).map((r) => toDomain(r)),
       total: count ?? 0,
       page,
       pageSize,
@@ -118,14 +130,26 @@ export const staffService = {
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!data) return null;
-    return toDomain(data as unknown as DbStaff);
+
+    // Look up the linked login, if any
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, role, status, email")
+      .eq("staff_id", id)
+      .maybeSingle();
+
+    return toDomain(data as unknown as DbStaff, profile as DbProfile | null);
   },
 
-  async create(values: StaffFormValues): Promise<Staff> {
+  /**
+   * Create a staff record. If `systemRole` is set in the values,
+   * this also provisions a login for the staff member.
+   */
+  async create(values: StaffFormValues): Promise<StaffCreateResult> {
     const supabase = requireSupabase();
 
+    // 1. Create the staff record
     const prefix = staffPrefix(values.jobTitle, values.category);
-
     const { data: nextIdData, error: nextErr } = await supabase.rpc(
       "next_staff_id",
       { p_prefix: prefix },
@@ -135,7 +159,7 @@ export const staffService = {
     }
     const staffId = nextIdData as string;
 
-    const { data, error } = await supabase
+    const { data: staffRow, error: staffErr } = await supabase
       .from("staff")
       .insert({
         staff_id: staffId,
@@ -145,7 +169,7 @@ export const staffService = {
         date_of_birth: values.dateOfBirth,
         gender: values.gender,
         phone: values.phone,
-        email: values.email,
+        email: values.email.toLowerCase().trim(),
         address: values.address,
         category: values.category,
         department: values.department ?? null,
@@ -157,8 +181,55 @@ export const staffService = {
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
-    return toDomain(data as unknown as DbStaff);
+
+    if (staffErr || !staffRow) {
+      throw new Error(staffErr?.message ?? "Could not create staff record");
+    }
+
+    // 2. If a system role was chosen, create the login
+    if (values.systemRole) {
+      const { data: provision, error: provErr } =
+        await supabase.functions.invoke<{
+          ok: boolean;
+          reason?: string;
+          userId?: string;
+          staffId?: string;
+        }>("provision-user", {
+          body: {
+            fullName: `${values.firstName} ${values.lastName}`,
+            email: values.email.toLowerCase().trim(),
+            password: "Password1",
+            role: values.systemRole,
+            staffId: staffRow.id,
+          },
+        });
+
+      if (provErr || !provision?.ok) {
+        // Roll back the staff record so we don't have a broken half-state
+        await supabase.from("staff").delete().eq("id", staffRow.id);
+        throw new Error(
+          provision?.reason ??
+            provErr?.message ??
+            "Could not create login for staff member",
+        );
+      }
+
+      return {
+        staff: toDomain(staffRow as unknown as DbStaff, {
+          id: provision.userId!,
+          role: values.systemRole,
+          status: values.accountStatus,
+          email: values.email.toLowerCase().trim(),
+        }),
+        loginCreated: true,
+        loginEmail: values.email.toLowerCase().trim(),
+      };
+    }
+
+    return {
+      staff: toDomain(staffRow as unknown as DbStaff),
+      loginCreated: false,
+    };
   },
 
   async update(id: string, values: StaffFormValues): Promise<Staff> {
@@ -172,7 +243,7 @@ export const staffService = {
         date_of_birth: values.dateOfBirth,
         gender: values.gender,
         phone: values.phone,
-        email: values.email,
+        email: values.email.toLowerCase().trim(),
         address: values.address,
         category: values.category,
         department: values.department ?? null,
@@ -186,7 +257,14 @@ export const staffService = {
       .select("*")
       .single();
     if (error) throw new Error(error.message);
-    return toDomain(data as unknown as DbStaff);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, role, status, email")
+      .eq("staff_id", id)
+      .maybeSingle();
+
+    return toDomain(data as unknown as DbStaff, profile as DbProfile | null);
   },
 
   async remove(id: string): Promise<void> {
