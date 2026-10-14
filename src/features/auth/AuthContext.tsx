@@ -19,44 +19,10 @@ type AuthContextValue = {
     password: string,
   ) => Promise<{ ok: boolean; reason?: string }>;
   signOut: () => Promise<void>;
-  signInAsDemo: (role: Role) => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-const DEMO_USERS: Record<Role, AuthUser> = {
-  super_admin: {
-    id: "demo-admin",
-    email: "admin@supreme.edu.gh",
-    fullName: "Kwame Mensah",
-    role: "super_admin",
-  },
-  headmaster: {
-    id: "demo-head",
-    email: "head@supreme.edu.gh",
-    fullName: "Akosua Boateng",
-    role: "headmaster",
-  },
-  teacher: {
-    id: "demo-teach",
-    email: "teacher@supreme.edu.gh",
-    fullName: "Yaw Owusu",
-    role: "teacher",
-  },
-  secretary: {
-    id: "demo-sec",
-    email: "sec@supreme.edu.gh",
-    fullName: "Abena Asante",
-    role: "secretary",
-  },
-  student: {
-    id: "demo-stu",
-    email: "kofi.adjei@supreme.edu.gh",
-    fullName: "Kofi Adjei",
-    role: "student",
-    studentId: "demo-stu-001",
-  },
-};
 
 function sessionToUser(session: Session | null): AuthUser | null {
   if (!session?.user) return null;
@@ -119,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
 
-    // Initial session read
     supabase.auth.getSession().then(async ({ data }) => {
       if (cancelled) return;
       const base = sessionToUser(data.session);
@@ -135,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Live updates
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -164,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, reason: "Supabase is not configured." };
         }
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim().toLowerCase(),
           password,
         });
         if (error) {
@@ -176,8 +140,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (supabase) await supabase.auth.signOut();
         setUser(null);
       },
-      signInAsDemo(role) {
-        setUser(DEMO_USERS[role]);
+      async refreshUser() {
+        if (!supabase) return;
+        const { data } = await supabase.auth.getSession();
+        const base = sessionToUser(data.session);
+        if (!base) {
+          setUser(null);
+          return;
+        }
+        const enriched = await enrichUser(base);
+        setUser(enriched);
       },
     }),
     [user, loading],

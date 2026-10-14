@@ -12,6 +12,7 @@ import StudentDashboard from "@/pages/dashboards/StudentDashboard";
 import StudentListPage from "@/features/students/StudentListPage";
 import StudentDetailPage from "@/features/students/StudentDetailPage";
 import StudentFormPage from "@/features/students/StudentFormPage";
+import StudentImportPage from "@/features/students/StudentImportPage";
 import ClassListPage from "@/features/academics/classes/ClassListPage";
 import ClassDetailPage from "@/features/academics/classes/ClassDetailPage";
 import ClassFormPage from "@/features/academics/classes/ClassFormPage";
@@ -51,18 +52,20 @@ import ScratchCardGeneratePage from "@/features/scratch-cards/ScratchCardGenerat
 import StudentResultsPage from "@/features/student-portal/StudentResultPage";
 import StudentReportPage from "@/features/student-portal/StudentReportPage";
 import StudentFeesPage from "@/features/student-portal/StudentFeesPage";
+import StudentActivatePage from "@/features/student-portal/StudentActivatePage";
+import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
 import AuditLogPage from "@/features/audit/AuditLogPage";
 import ReportsPage from "@/features/reports/ReportsPage";
 import SettingsPage from "@/features/settings/SettingsPage";
-import StudentActivatePage from "@/features/student-portal/StudentActivatePage";
-import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
 import TermsPage from "@/pages/legal/TermsPage";
 import PrivacyPage from "@/pages/legal/PrivacyPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
-import StudentImportPage from "@/features/students/StudentImportPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import UserListPage from "@/features/users/UserListPage";
+import UserDetailPage from "@/features/users/UserDetailPage";
+import UserFormPage from "@/features/users/UserFormPage";
 
 export default function App() {
   return (
@@ -78,6 +81,7 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/" element={<LandingPage />} />
+
         {/* ============ Authenticated shell ============ */}
         <Route
           element={
@@ -156,6 +160,32 @@ export default function App() {
             element={
               <RequireRole roles={["student"]}>
                 <StudentFeesPage />
+              </RequireRole>
+            }
+          />
+
+          {/* ============ Users & Roles (Super Admin only) ============ */}
+          <Route
+            path="/admin/users"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <UserListPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/users/new"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <UserFormPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/users/:id"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <UserDetailPage />
               </RequireRole>
             }
           />
