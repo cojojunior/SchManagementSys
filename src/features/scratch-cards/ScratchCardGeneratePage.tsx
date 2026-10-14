@@ -30,7 +30,7 @@ type FormValues = z.infer<typeof schema>;
 type GeneratedCard = {
   id: string;
   serialNumber: string;
-  rawPin: string;
+  pin: string;
   division: string;
   termName: string;
   price: number;
@@ -66,7 +66,7 @@ export default function ScratchCardGeneratePage() {
         cards.map((c) => ({
           id: c.id,
           serialNumber: c.serialNumber,
-          rawPin: c.serialNumber, // PIN == serial
+          pin: c.pinPlain ?? "",
           division: c.division,
           termName: c.termName,
           price: c.price,
@@ -89,7 +89,7 @@ export default function ScratchCardGeneratePage() {
       ["Serial", "PIN", "Division", "Term", "Price (GHS)"],
       ...generated.map((c) => [
         c.serialNumber,
-        c.rawPin,
+        c.pin,
         c.division,
         c.termName,
         c.price.toFixed(2),
@@ -255,7 +255,7 @@ export default function ScratchCardGeneratePage() {
                       {c.serialNumber}
                     </td>
                     <td className="px-4 py-2 font-mono text-sm font-semibold">
-                      {c.rawPin}
+                      {c.pin}
                     </td>
                     <td className="px-4 py-2 uppercase">{c.division}</td>
                     <td className="px-4 py-2">{c.termName}</td>

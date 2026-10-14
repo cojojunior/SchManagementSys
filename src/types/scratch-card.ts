@@ -5,10 +5,13 @@ export type ScratchCardStatus =
 
 export type ScratchCard = {
   id: UUID;
+  /** Public identifier, e.g. "SC-A7K3-9P2M" */
   serialNumber: string;
+  /** bcrypt hash of the PIN, used for redemption */
   pinHash: string;
-  /** The plaintext PIN (== serialNumber). Visible to Super Admin + Secretary. */
+  /** The plaintext 4-digit PIN. Visible to Super Admin + Secretary only. */
   pinPlain?: string;
+  /** Display fallback when the caller can't see the plain PIN */
   maskedPin: string;
   division: Division;
   termId: UUID;

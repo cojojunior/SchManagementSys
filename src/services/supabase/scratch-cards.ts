@@ -16,6 +16,7 @@ type DbCard = {
   serial_number: string;
   pin_hash: string;
   pin_plain: string | null;
+  pin_unique_key: string | null;
   masked_pin: string;
   division: "nursery" | "kg" | "primary" | "jhs";
   term_id: string;
@@ -181,6 +182,7 @@ export const scratchCardsService = {
       cards?: Array<{
         id: string;
         serialNumber: string;
+        pin: string;
         price: number;
       }>;
     }>("generate-scratch-cards", {
@@ -202,7 +204,7 @@ export const scratchCardsService = {
       id: c.id,
       serialNumber: c.serialNumber,
       pinHash: "",
-      pinPlain: c.serialNumber, // PIN == serial
+      pinPlain: c.pin, // the 4-digit PIN
       maskedPin: "••••",
       division: values.division,
       termId: values.termId,
