@@ -19,7 +19,7 @@ import {
 import { Pagination } from "@/components/ui/Pagination";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { useList } from "@/hooks/useList";
-import { feeStructuresService } from "@/services/fee-structure";
+import { feeStructuresService } from "@/services/supabase/fee-structures";
 import type { FeeStructure, FeeStructureFilters } from "@/types/finance";
 import { formatCurrency } from "@/lib/format";
 

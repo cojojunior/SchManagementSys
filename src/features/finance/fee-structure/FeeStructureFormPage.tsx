@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import { useLookup } from "@/hooks/useLookup";
-import { feeStructuresService } from "@/services/fee-structure";
+import { feeStructuresService } from "@/services/supabase/fee-structures";
 import { classesService } from "@/services/supabase/classes";
 import { academicYearsService } from "@/services/supabase/academic-years";
 import { CURRENCY_SYMBOL } from "@/lib/constants";

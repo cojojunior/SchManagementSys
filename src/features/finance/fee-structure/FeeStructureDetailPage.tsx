@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
-import { feeStructuresService } from "@/services/fee-structure";
+import { feeStructuresService } from "@/services/supabase/fee-structures";
 import type { FeeStructure } from "@/types/finance";
 import { formatCurrency } from "@/lib/format";
 
