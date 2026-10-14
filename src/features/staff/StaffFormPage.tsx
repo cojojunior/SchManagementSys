@@ -198,7 +198,7 @@ export default function StaffFormPage() {
               <FormField
                 label="Department"
                 error={errors.department?.message}
-                hint="e.g. Mathematics, Administration">
+                hint="e.g. Nursery, KG, Primary, JHS">
                 <Input {...register("department")} />
               </FormField>
               <FormField

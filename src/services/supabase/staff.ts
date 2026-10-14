@@ -44,12 +44,27 @@ function toDomain(row: DbStaff): Staff {
     dateHired: row.date_hired,
     qualification: row.qualification ?? undefined,
     photoUrl: row.photo_url ?? undefined,
-    systemRole: null, // fetched via a join on profiles when needed
+    systemRole: null,
     accountStatus:
       row.account_status === "suspended" ? "inactive" : row.account_status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+/**
+ * Derive the staff ID prefix from job title + category.
+ * Only HEAD, TCH, SEC are allowed by the DB constraint.
+ */
+function staffPrefix(
+  jobTitle: string,
+  category: "teaching" | "non_teaching",
+): "HEAD" | "TCH" | "SEC" {
+  const t = jobTitle.toLowerCase().trim();
+  if (t.includes("headmaster") || t.includes("head master")) return "HEAD";
+  if (t.includes("secretary")) return "SEC";
+  if (category === "teaching") return "TCH";
+  return "SEC"; // fallback for other non-teaching staff
 }
 
 export const staffService = {
@@ -109,12 +124,16 @@ export const staffService = {
   async create(values: StaffFormValues): Promise<Staff> {
     const supabase = requireSupabase();
 
-    // Generate a staff ID
-    const { count } = await supabase
-      .from("staff")
-      .select("*", { count: "exact", head: true });
-    const next = (count ?? 0) + 1;
-    const staffId = `SA-STF-${String(next).padStart(4, "0")}`;
+    const prefix = staffPrefix(values.jobTitle, values.category);
+
+    const { data: nextIdData, error: nextErr } = await supabase.rpc(
+      "next_staff_id",
+      { p_prefix: prefix },
+    );
+    if (nextErr || !nextIdData) {
+      throw new Error(nextErr?.message ?? "Could not generate staff ID");
+    }
+    const staffId = nextIdData as string;
 
     const { data, error } = await supabase
       .from("staff")
