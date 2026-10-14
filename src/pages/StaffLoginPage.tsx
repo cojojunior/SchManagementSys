@@ -8,11 +8,9 @@ import { FormField } from "@/components/ui/FormField";
 import { supabase } from "@/lib/supabase";
 import { ROLE_HOME, type Role } from "@/lib/constants";
 
-const STAFF_DOMAIN = "supremeacademy.edu.gh";
-
 export default function StaffLoginPage() {
   const navigate = useNavigate();
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
@@ -27,30 +25,14 @@ export default function StaffLoginPage() {
         return;
       }
 
-      const trimmed = identifier.trim();
-
-      // Two modes:
-      //   - Super Admin signs in with a real email (contains "@")
-      //   - Everyone else signs in with a Staff ID (HEAD001, TCH042, SEC003)
-      let email: string;
-      if (trimmed.includes("@")) {
-        email = trimmed.toLowerCase();
-      } else {
-        const id = trimmed.toUpperCase();
-        if (!/^(HEAD|TCH|SEC)\d{3,4}$/.test(id)) {
-          setError(
-            "Staff ID should look like HEAD001, TCH042, or SEC003. Super Admins sign in with their email.",
-          );
-          return;
-        }
-        email = `${id.toLowerCase()}@${STAFF_DOMAIN}`;
-      }
-
       const { data, error: signInError } =
-        await supabase.auth.signInWithPassword({ email, password });
+        await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
 
       if (signInError || !data.user) {
-        setError("Invalid credentials. Please check and try again.");
+        setError("Invalid email or password.");
         return;
       }
 
@@ -79,24 +61,21 @@ export default function StaffLoginPage() {
             </div>
             <h1 className="mt-3 text-xl font-semibold">Staff Sign In</h1>
             <p className="text-sm text-ink-500 mt-1">
-              Use your Staff ID, or your email if you&apos;re a Super Admin
+              Sign in with your email address
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField
-              label="Staff ID or Email"
-              required
-              hint="e.g. HEAD001, TCH042, SEC003 — or your email">
+            <FormField label="Email" required>
               <Input
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="HEAD001"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@gmail.com"
                 autoComplete="username"
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
-                className="font-mono"
               />
             </FormField>
 
@@ -119,7 +98,7 @@ export default function StaffLoginPage() {
               type="submit"
               className="w-full"
               size="lg"
-              disabled={working || !identifier || !password}>
+              disabled={working || !email || !password}>
               {working ? "Signing in…" : "Sign in"}
             </Button>
           </form>

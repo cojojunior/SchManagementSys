@@ -17,8 +17,7 @@ const schema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(["super_admin", "headmaster", "teacher", "secretary"]),
-  staffId: z.string().optional(),
+  role: z.enum(["headmaster", "teacher", "secretary"]),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -52,8 +51,7 @@ export default function UserFormPage() {
   const { register, handleSubmit, formState } = form;
   const { errors } = formState;
 
-  const roles: Array<Exclude<Role, "student">> = [
-    "super_admin",
+  const roles: Array<Exclude<Role, "student" | "super_admin">> = [
     "headmaster",
     "teacher",
     "secretary",
@@ -79,28 +77,41 @@ export default function UserFormPage() {
               label="Full name"
               required
               error={errors.fullName?.message}>
-              <Input {...register("fullName")} invalid={!!errors.fullName} />
+              <Input
+                {...register("fullName")}
+                invalid={!!errors.fullName}
+                placeholder="Kwame Mensah"
+              />
             </FormField>
-            <FormField label="Email" required error={errors.email?.message}>
+
+            <FormField
+              label="Email"
+              required
+              error={errors.email?.message}
+              hint="The staff member's personal email — used for login">
               <Input
                 type="email"
                 autoComplete="off"
                 {...register("email")}
                 invalid={!!errors.email}
+                placeholder="kwame@gmail.com"
               />
             </FormField>
+
             <FormField
               label="Temporary password"
               required
-              error={errors.password?.message}
-              hint="At least 8 characters. The user can change it later.">
+              hint="All new staff start with this password and are forced to change it on first login.">
               <Input
                 type="text"
-                autoComplete="new-password"
-                {...register("password")}
-                invalid={!!errors.password}
+                value="Password1"
+                readOnly
+                disabled
+                className="font-mono bg-ink-50"
               />
+              <input type="hidden" {...register("password")} />
             </FormField>
+
             <FormField label="Role" required error={errors.role?.message}>
               <Select {...register("role")}>
                 {roles.map((r) => (
@@ -109,13 +120,6 @@ export default function UserFormPage() {
                   </option>
                 ))}
               </Select>
-            </FormField>
-            <FormField
-              label="Staff ID (optional)"
-              error={errors.staffId?.message}
-              hint="Link to an existing staff record, if any"
-              className="sm:col-span-2">
-              <Input {...register("staffId")} placeholder="e.g. staff UUID" />
             </FormField>
           </CardBody>
         </Card>

@@ -27,8 +27,7 @@ export type ProvisionUserValues = {
   email: string;
   password: string;
   fullName: string;
-  role: Exclude<Role, "student">;
-  staffId?: UUID;
+  role: "headmaster" | "teacher" | "secretary";
 };
 
 export type RoleChangeLogEntry = {

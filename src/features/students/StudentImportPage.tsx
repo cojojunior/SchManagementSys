@@ -48,11 +48,24 @@ export default function StudentImportPage() {
       return;
     }
 
-    const objects = rowsToObjects(parsed);
-    if (objects.length === 0) {
-      setParseError("No data rows found.");
-      return;
-    }
+ let objects = rowsToObjects(parsed);
+ if (objects.length === 0) {
+   setParseError("No data rows found.");
+   return;
+ }
+
+ // Sort by last_name, then first_name (case-insensitive)
+ objects = objects.slice().sort((a, b) => {
+   const aLast = (a.last_name ?? "").trim().toLowerCase();
+   const bLast = (b.last_name ?? "").trim().toLowerCase();
+   if (aLast !== bLast) return aLast < bLast ? -1 : 1;
+
+   const aFirst = (a.first_name ?? "").trim().toLowerCase();
+   const bFirst = (b.first_name ?? "").trim().toLowerCase();
+   if (aFirst !== bFirst) return aFirst < bFirst ? -1 : 1;
+
+   return 0;
+ });
 
     setFileName(file.name);
     setValidating(true);
