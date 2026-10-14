@@ -61,17 +61,17 @@ export default function ScratchCardGeneratePage() {
     setSubmitting(true);
     setFormError(null);
     try {
-      const cards = await scratchCardsService.generate(values);
-      setGenerated(
-        cards.map((c) => ({
-          id: c.id,
-          serialNumber: c.serialNumber,
-          rawPin: c.rawPin,
-          division: c.division,
-          termName: c.termName,
-          price: c.price,
-        })),
-      );
+     const cards = await scratchCardsService.generate(values);
+     setGenerated(
+       cards.map((c) => ({
+         id: c.id,
+         serialNumber: c.serialNumber,
+         rawPin: c.serialNumber, // PIN == serial
+         division: c.division,
+         termName: c.termName,
+         price: c.price,
+       })),
+     );
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
