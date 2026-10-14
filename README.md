@@ -32,13 +32,15 @@ fees, scratch-card result access, and role-based portals — all backed by Supab
 14. [Grading model](#grading-model)
 15. [Student activation & login](#student-activation--login)
 16. [Staff provisioning](#staff-provisioning)
-17. [Dashboard & Settings](#dashboard--settings)
-18. [Deployment](#deployment)
-19. [Backups & recovery](#backups--recovery)
-20. [Operational runbook](#operational-runbook)
-21. [Testing checklist](#testing-checklist)
-22. [Troubleshooting](#troubleshooting)
-23. [Roadmap](#roadmap)
+17. [Password resets](#password-resets)
+18. [CSV student import](#csv-student-import)
+19. [Dashboard & Settings](#dashboard--settings)
+20. [Deployment](#deployment)
+21. [Backups & recovery](#backups--recovery)
+22. [Operational runbook](#operational-runbook)
+23. [Testing checklist](#testing-checklist)
+24. [Troubleshooting](#troubleshooting)
+25. [Roadmap](#roadmap)
 
 ---
 
@@ -61,9 +63,8 @@ Supabase project, deployed to Netlify as a static SPA.
 - **Hashed PINs.** Student login codes are bcrypt-hashed via an Edge Function.
   Scratch-card PINs are hashed with `crypt()` in Postgres. Raw PINs are never
   stored or logged.
-- **Synthetic emails.** Staff sign in with a Staff ID (`HEAD001`, `TCH042`,
-  `SEC003`) — the app converts that to an internal email address behind the
-  scenes. Users never see or type an email.
+- **Real emails for staff.** Staff sign in with their own email address; the
+  password is set to `Password1` initially and must be changed on first login.
 - **Audit trail.** Role changes, grade edits after submission, publishes,
   locks, scratch-card redemptions, and privileged actions are logged.
 
@@ -72,7 +73,7 @@ Supabase project, deployed to Netlify as a static SPA.
 ## Features
 
 ### Academic records
-- Students (with guardians, photo, status, class assignment)
+- Students (with guardians, medical notes, photo, status, class assignment)
 - Staff (teaching + non-teaching, employment status, contact details)
 - Classes (with optional streams; class teacher; capacity)
 - Subjects (per division; core/elective)
@@ -115,9 +116,11 @@ Supabase project, deployed to Netlify as a static SPA.
 
 ### Admin
 - Role-based access control (5 roles)
-- User provisioning from within the app
+- User provisioning from within the app with real email addresses
 - Auto-generated Staff IDs (`HEAD###`, `TCH###`, `SEC###`)
 - Forced password change on first staff login
+- **Password reset flows** — self-service via email link, or Super Admin-forced reset to `Password1`
+- **CSV bulk import** for students
 - Role history and audit log
 - School settings hub with grouped link cards
 - Reports (enrollment, finance, performance)
@@ -128,20 +131,15 @@ Supabase project, deployed to Netlify as a static SPA.
 
 | Who | Credentials | Notes |
 |---|---|---|
-| **Super Admin** | Personal email + password | No Staff ID. Created manually in Supabase. |
-| **Headmaster** | `HEAD001` + password | Behind the scenes: `head001@supremeacademy.edu.gh` |
-| **Teacher** | `TCH001` + password | Behind the scenes: `tch001@supremeacademy.edu.gh` |
-| **Secretary** | `SEC001` + password | Behind the scenes: `sec001@supremeacademy.edu.gh` |
-| **Student** | `SUAC001` + 4-digit code | Code chosen by student on first visit |
+| **Super Admin** | Personal email + password | Created manually in Supabase. No Staff ID. |
+| **Headmaster** | Personal email + password | Created by Super Admin. |
+| **Teacher** | Personal email + password | Created by Super Admin. |
+| **Secretary** | Personal email + password | Created by Super Admin. |
+| **Student** | `SA001` + 4-digit code | Code chosen by student on first visit. |
 
-**Staff temporary password:** `Password1`. Every staff member is forced to
-change it on their first login.
-
-**Admission numbers:** `SUAC001`, `SUAC002`, … — auto-generated server-side by
-a Postgres function.
-
-**Staff IDs:** auto-increment per prefix (`HEAD001`, `HEAD002`, …, `TCH001`, …,
-`SEC001`, …).
+- **Staff temporary password:** `Password1`. Forced change on first login.
+- **Admission numbers:** `SA001`, `SA002`, … — auto-generated server-side by a Postgres function.
+- **Staff IDs:** auto-increment per prefix (`HEAD001`, `TCH001`, `SEC001`, …). Used internally in staff records, not for login.
 
 ---
 
@@ -168,8 +166,7 @@ a Postgres function.
 
 `C` = create · `R` = read · `U` = update · `D` = delete
 
-All rules enforced by RLS policies, mirrored in `src/lib/permissions.ts`
-for UI gating.
+All rules enforced by RLS policies, mirrored in `src/lib/permissions.ts` for UI gating.
 
 ---
 
@@ -188,7 +185,7 @@ for UI gating.
 
 ### Backend
 - Supabase Postgres (15.x)
-- Supabase Auth (email/password; synthetic emails for staff and students)
+- Supabase Auth (email/password)
 - Supabase Edge Functions (Deno)
 - Row Level Security on every sensitive table
 - pgcrypto for bcrypt hashing
@@ -211,6 +208,7 @@ supreme-academy/
 │   │   ├── auth/                   # AuthContext, RequireRole, RoleGate
 │   │   ├── students/
 │   │   ├── staff/
+│   │   ├── users/                  # Users & Roles admin
 │   │   ├── academics/
 │   │   │   ├── academic-years/
 │   │   │   ├── grading/
@@ -229,7 +227,6 @@ supreme-academy/
 │   │   │   └── dashboard/
 │   │   ├── scratch-cards/
 │   │   ├── student-portal/
-│   │   ├── users/
 │   │   ├── audit/
 │   │   ├── reports/
 │   │   ├── settings/
@@ -242,16 +239,21 @@ supreme-academy/
 │   │   ├── LandingPage.tsx
 │   │   ├── StaffLoginPage.tsx
 │   │   ├── ChangePasswordPage.tsx
+│   │   ├── ForgotPasswordPage.tsx
+│   │   ├── ResetPasswordPage.tsx
 │   │   ├── NotFoundPage.tsx
 │   │   ├── legal/                  # TermsPage, PrivacyPage, LegalLayout
 │   │   └── dashboards/
 │   ├── services/
 │   │   ├── supabase/               # real backend services
-│   │   ├── mock/                   # fictional data (dev only)
-│   │   └── *.ts                    # legacy mocks — safe to keep
+│   │   │   ├── student.ts          # students service (in use)
+│   │   │   ├── students.ts         # (orphan, safe to delete later)
+│   │   │   └── ...                 # all other Supabase services
+│   │   ├── finance-dashboard.ts    # live — uses supabase/invoices internally
+│   │   └── report-card.ts          # live — uses supabase services internally
 │   ├── styles/index.css
 │   ├── types/
-│   ├── utils/
+│   ├── utils/                      # csv.ts
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── vite-env.d.ts
@@ -325,11 +327,9 @@ VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 ```
 
-**Never add:** `SUPABASE_SERVICE_ROLE_KEY` — this must live only in Edge
-Functions.
+**Never add:** `SUPABASE_SERVICE_ROLE_KEY` — this must live only in Edge Functions.
 
-For Netlify, add the same keys under **Site configuration → Environment
-variables**.
+For Netlify, add the same keys under **Site configuration → Environment variables**.
 
 ---
 
@@ -350,8 +350,7 @@ variables**.
 - `assessment_weights` — single-row config
 
 ### People
-- `students` — including `student_code_hash`, `student_code_unique`,
-  `student_code_set_at`
+- `students` — with `student_code_hash`, `student_code_unique`, `student_code_set_at`
 - `guardians`
 - `staff`
 - `classes`, `subjects`
@@ -408,6 +407,8 @@ constraints, and indexes on hot query columns.
 | 0021 | `staff_and_student_login_model.sql` | student_code, next_staff_id |
 | 0022 | `student_admission_number.sql` | SUAC### format + next_admission_number |
 | 0023 | `must_change_password.sql` | forced first-login password change |
+| 0024 | `student_admission_sa_format.sql` | SA### format |
+| 0025 | `password_reset_actions.sql` | audit index for password resets |
 
 ---
 
@@ -420,14 +421,11 @@ Key principles:
 
 1. **Roles come from `app_metadata.role`** in the JWT — set by an Edge
    Function during provisioning, not user-editable.
-2. **Students can only read themselves** — enforced by
-   `student_id = (select student_id from profiles where id = auth.uid())`.
-3. **Teachers can only modify their own classes** — enforced by joining
-   through `teaching_assignments`.
-4. **Only headmaster+ can publish or lock results** — enforced by role
-   check in policy.
-5. **Direct writes to sensitive tables are blocked** — those operations
-   go through `SECURITY DEFINER` functions.
+2. **Students can only read themselves.**
+3. **Teachers can only modify their own classes.**
+4. **Only headmaster+ can publish or lock results.**
+5. **Direct writes to sensitive tables are blocked** — those operations go
+   through `SECURITY DEFINER` functions.
 
 To verify RLS is on for all tables:
 
@@ -445,16 +443,16 @@ Should return nothing.
 
 ## Edge Functions
 
-Deployed via Supabase dashboard → Edge Functions.
-
 | Function | Purpose |
 |---|---|
-| `provision-user` | Super Admin creates a staff account (returns `HEAD###` / `TCH###` / `SEC###`) |
-| `verify-student-login` | Student login: verify admission number + code, issue proof token |
+| `provision-user` | Super Admin creates a staff account (with real email) |
+| `verify-student-login` | Student login: verify admission number + code, issue proof |
 | `mint-student-session` | Exchange proof token for a real session |
 | `student-activate-verify` | Activation step 1: verify admission + DOB |
-| `student-activate-set-code` | Activation step 2: set code, create auth user, sign in |
+| `student-activate-set-code` | Activation step 2: set code, create user, sign in |
 | `generate-scratch-cards` | Create N cards with hashed PINs |
+| `reset-staff-password` | Super Admin forces a password reset to `Password1` |
+| `delete-staff` | Super Admin deletes staff record with optional login deletion |
 
 All functions:
 - Validate the caller's JWT and role server-side
@@ -471,7 +469,7 @@ All functions:
 | `current_user_role()` | Reads role from JWT |
 | `is_super_admin()`, `is_staff()`, `is_headmaster_or_above()` | RLS helpers |
 | `next_staff_id(prefix)` | Returns next `HEAD###` / `TCH###` / `SEC###` |
-| `next_admission_number()` | Returns next `SUAC###` |
+| `next_admission_number()` | Returns next `SA###` |
 | `lookup_grade(division, score)` | Returns grade/label for a score |
 | `recalculate_score(score_id)` | Recomputes weighted score + grade |
 | `set_student_code(student, code)` | bcrypt-hashes the code, enforces uniqueness |
@@ -495,12 +493,10 @@ All `SECURITY DEFINER` functions use:
 ### Generation
 1. Super Admin or Secretary opens **Scratch Cards → Generate**
 2. Picks division, term, quantity
-3. `generate-scratch-cards` Edge Function:
-   - Generates an 8-digit random PIN per card
-   - Hashes it with `hash_scratch_pin()` (Postgres bcrypt)
-   - Inserts into `scratch_cards` with `uses_remaining = 3`
-   - Returns the raw PINs to the operator **once**
-4. Operator saves/prints the PINs. They are not recoverable afterward.
+3. `generate-scratch-cards` Edge Function generates an 8-digit PIN per card,
+   hashes it with `hash_scratch_pin()` (Postgres bcrypt), inserts with
+   `uses_remaining = 3`, and returns the raw PINs **once**
+4. Operator saves/prints the PINs. Not recoverable afterward.
 
 ### Issuance
 - Optional: assign a card to a specific student
@@ -511,7 +507,7 @@ Student enters PIN on `/student/results`:
 
 1. Client calls `scratchCardsService.redeem(pin, studentId, termId)`
 2. That calls the Postgres function `redeem_scratch_card`, which:
-   - Locks the matching card row (`SELECT ... FOR UPDATE`)
+   - Locks the card row (`SELECT ... FOR UPDATE`)
    - Verifies `crypt(pin, pin_hash)` matches
    - Verifies `term_id` matches
    - Verifies `uses_remaining > 0`
@@ -522,8 +518,8 @@ Student enters PIN on `/student/results`:
 Concurrency-safe: two simultaneous requests can never exceed 3 uses.
 
 **Counting rule:** 1 use = 1 successful PIN verification that unlocks a
-specific (student, term). Refreshing the page or downloading the PDF in the
-same unlocked session does not consume additional uses.
+specific (student, term). Refreshing or downloading the PDF in the same
+unlocked session does not consume additional uses.
 
 ---
 
@@ -541,8 +537,7 @@ final = (assessment_raw / assessment_max) × assessment_weight
 ```
 
 ### Rounding
-Raw weighted score stored to 2 decimals.
-Grade lookup uses `round_half_up(final)` — 74.5 → 75.
+Raw weighted score stored to 2 decimals. Grade lookup uses `round_half_up`.
 
 ### Scales
 
@@ -569,7 +564,7 @@ Grade lookup uses `round_half_up(final)` — 74.5 → 75.
 | G | 60–69 | Good |
 | D | 0–59 | Developing |
 
-All bands are editable by Super Admin — no code changes needed.
+All bands editable by Super Admin — no code changes needed.
 
 ---
 
@@ -578,59 +573,100 @@ All bands are editable by Super Admin — no code changes needed.
 ### First visit (activation)
 1. Visit `/student/activate`
 2. Enter admission number + date of birth
-3. `student-activate-verify` Edge Function verifies identity → returns proof
+3. `student-activate-verify` verifies → returns proof
 4. Student chooses a 4-digit code
-5. `student-activate-set-code`:
-   - Validates the proof
-   - bcrypt-hashes the code
-   - Stores it in `students.student_code_hash` and a deterministic key in
-     `students.student_code_unique`
-   - Creates the student's `auth.users` row with a synthetic email
-     `<studentId>@students.supreme.local`
-   - Returns credentials
+5. `student-activate-set-code` validates proof, bcrypt-hashes the code,
+   creates `auth.users` with synthetic email `<studentId>@students.supreme.local`,
+   returns credentials
 6. Client signs in → lands on `/student`
 
 ### Subsequent logins
 1. Visit `/student/login`
 2. Enter admission number + 4-digit code
-3. `verify-student-login`:
-   - Looks up the student
-   - Verifies the code via `verify_student_code`
-   - Creates a short-lived proof token (60s TTL)
-4. Client calls `mint-student-session` with the proof → gets fresh credentials
+3. `verify-student-login` looks up the student, verifies the code, creates
+   a short-lived proof token (60s TTL)
+4. Client calls `mint-student-session` with the proof → fresh credentials
 5. Client signs in
 
 ### Security properties
-- 4-digit codes are treated as **low-security credentials**
-- Recovery is in-person at the school (Secretary or Super Admin resets)
-- Generic error messages — never reveals whether a student record exists
-- Codes cannot be guessed (no `1234`, `0000`, `1111`)
+- 4-digit codes treated as low-security credentials
+- Recovery is in-person at the school
+- Generic error messages
+- Codes can't be obvious patterns (no `1234`, `0000`, `1111`)
 
 ---
 
 ## Staff provisioning
 
 1. Super Admin signs in
-2. **Users & Roles → Add staff account**
-3. Fill in:
-   - Full name
-   - Role (`headmaster` / `teacher` / `secretary`)
-   - Temporary password: **`Password1`** (fixed, read-only)
+2. **Staff → Add staff** (or **Users & Roles → Add staff account**)
+3. Fill in: full name, **real email**, role, and other employment fields
 4. `provision-user` Edge Function:
-   - Calls `next_staff_id(prefix)` → e.g. `TCH001`
-   - Creates `auth.users` row with email `tch001@supremeacademy.edu.gh`
+   - Generates a Staff ID (`TCH001`, `HEAD001`, `SEC001`)
+   - Creates `auth.users` with the real email
    - Sets `app_metadata.role` and `app_metadata.staff_id`
-   - Sets `must_change_password = true` on the profile
-5. Staff member signs in with Staff ID + `Password1`
-6. `RequireRole` intercepts and forces redirect to `/change-password`
+   - Creates a `profiles` row with the correct role
+   - Sets `must_change_password = true`
+5. Staff signs in with their email + `Password1`
+6. `RequireRole` intercepts → forces redirect to `/change-password`
 7. Staff sets a strong password → flag clears → lands on their dashboard
 
-### Password recovery
-If a staff member forgets their password, the Super Admin resets it in the
-Supabase dashboard:
-- **Authentication → Users → find the user → Reset password**
+### Reset by Super Admin
+From the user's detail page or staff detail page:
+- **Reset password** — sets it back to `Password1`, forces change on next login
+- Or the user can use **Forgot password** on the login page
 
-Future enhancement: a "Reset password" button in the app.
+---
+
+## Password resets
+
+### Flow 1 — User-initiated (self-service)
+1. `/login` → **Forgot password?**
+2. Enter email → Supabase sends a reset link
+3. Click link → `/reset-password` page
+4. Enter **New Password** and **Confirm Password**
+5. Success popup → click OK → redirected to `/login`
+6. Sign in with the new password
+
+### Flow 2 — Super Admin resets to `Password1`
+1. Super Admin → user detail → **Reset password**
+2. Password set to `Password1`, `must_change_password = true`
+3. User signs in with `Password1` → forced to set a new one
+
+### Flow 3 — Voluntary change
+1. Signed-in user → avatar → **Change password**
+2. Enter **Current Password**, **New Password**, **Confirm New Password**
+3. Success popup → redirected to their dashboard
+
+**Note:** the forced reset (Flow 2) does not require the user to re-enter
+`Password1` — they were already authenticated by signing in.
+
+---
+
+## CSV student import
+
+### Format
+
+The CSV must have a header row. Columns:
+
+```csv
+first_name,last_name,other_names,date_of_birth,gender,nationality,division,class_name,academic_year,admission_date,address,previous_school,guardian_name,guardian_relationship,guardian_phone,guardian_email,guardian_address,guardian_is_emergency
+Kwame,Mensah,,2013-05-14,male,Ghanaian,jhs,JHS 1,2024/2025,2022-09-05,"12 Adenta, Accra",,Akosua Mensah,mother,+233245550101,akosua@example.com,"12 Adenta, Accra",true
+```
+
+**Required:** `first_name`, `last_name`, `date_of_birth`, `gender`, `division`, `class_name`, `academic_year`, `admission_date`, `address`, `guardian_name`, `guardian_relationship`, `guardian_phone`, `guardian_address`
+
+**Optional:** `other_names`, `nationality`, `previous_school`, `guardian_email`, `guardian_is_emergency`
+
+### How it works
+
+1. Super Admin → **Students → Import CSV**
+2. Upload file → live preview with per-row validation
+3. Rows are **sorted by surname, then first name** before admission numbers are assigned
+4. Valid rows get `SA###` numbers in order; invalid rows are skipped with reasons
+5. Import creates students + guardians in one batch
+
+**Note:** if you have 500 students to import, do a test with 3 first. Verify they appear correctly. Then wipe them and import the full batch.
 
 ---
 
@@ -638,40 +674,24 @@ Future enhancement: a "Reset password" button in the app.
 
 ### Per-role dashboards
 
-**Super Admin**
-- Stat cards: total students, active staff, fees collected, cards sold
-- Config cards (inline view): Academic Year, Assessment Weights (editable),
-  Grading Scales, Fee Structures
-- Recent activity from the audit log
-- "Manage all →" link to Settings
+**Super Admin** — stat cards + inline-editable config cards (Academic Year, Assessment Weights, Grading Scales, Fee Structures) + Recent Activity + "Manage all →" link
 
-**Headmaster**
-- Stat cards: students, current term, results pipeline
-- Read-only config cards: Academic Year, Assessment Weights, Grading Scales
-- Recent activity
+**Headmaster** — stat cards + read-only config cards (Academic Year, Assessment Weights, Grading Scales) + Recent Activity
 
-**Secretary**
-- Stat cards: students, staff, fees collected, outstanding
-- Read-only config cards: Academic Year, Fee Structures
-- Recent activity
+**Secretary** — stat cards + read-only config cards (Academic Year, Fee Structures) + Recent Activity
 
-**Teacher**
-- Stat cards + quick actions (no config)
+**Teacher** — stat cards + quick action buttons
 
-**Student**
-- Current class, scratch card status, fees balance
-- Quick actions: view results, report card, fees
+**Student** — current class, scratch card status, fees balance, quick actions
 
 ### Settings hub (`/admin/settings`)
 
 A grouped grid of link cards:
-- **Academic Configuration:** Academic Years, Grading, Assessment Weights,
-  Classes, Subjects, Assignments
+- **Academic Configuration:** Academic Years, Grading, Assessment Weights, Classes, Subjects, Assignments
 - **Finance:** Fee Structures, Invoices, Payments
 - **Administration:** Users & Roles, Audit Log, Reports
 
-Below the links, editable forms for: School identity, Currency & timezone,
-Scratch-card prices, Revenue split.
+Below the links, editable forms: School identity, Currency & timezone, Scratch-card prices, Revenue split.
 
 ---
 
@@ -707,13 +727,21 @@ Scratch-card prices, Revenue split.
 - **Site URL:** `https://supremeacademy.netlify.app`
 - **Redirect URLs:**
   - `https://supremeacademy.netlify.app/**`
+  - `https://supremeacademy.netlify.app/reset-password`
   - `http://localhost:5173/**`
 
-### Custom domain
-1. Netlify → Domain management → Add domain
-2. Point DNS to Netlify's nameservers
-3. SSL auto-provisions
-4. Update Supabase Auth URLs to include the custom domain
+### Custom SMTP
+
+Default Supabase email sender is rate-limited to 2 emails/hour and can only deliver to project team members. For real users, configure custom SMTP:
+
+**Authentication → Emails → SMTP Settings**
+- Host: `smtp.resend.com` (or Postmark, SES)
+- Port: 587
+- Username: `resend`
+- Password: your API key
+- Sender: `noreply@your-domain`
+
+Requires a verified sending domain (SPF, DKIM, DMARC records).
 
 ---
 
@@ -741,8 +769,7 @@ Store offline. Never commit.
 2. Create a staging Supabase project
 3. Restore the backup there
 4. Verify the data
-5. If correct, apply the missing transactions manually or schedule a
-   maintenance window
+5. If correct, apply the missing transactions manually or schedule a maintenance window
 
 ---
 
@@ -804,11 +831,22 @@ Store offline. Never commit.
 - [ ] Successful login lands on `/student`
 
 ### Staff flow
-- [ ] Super Admin provisions a staff member
+- [ ] Super Admin provisions a staff member with a real email
 - [ ] Staff ID is auto-generated (`TCH001`)
-- [ ] Staff signs in with `Password1`
+- [ ] Staff signs in with email + `Password1`
 - [ ] Redirected to `/change-password`
 - [ ] Can sign in with new password
+- [ ] Super Admin can reset a password → user must change on next login
+
+### Password reset flows
+- [ ] Forgot password sends an email
+- [ ] Reset link lands on `/reset-password`
+- [ ] New password saves and user can sign in
+- [ ] Super Admin force-reset works
+
+### Deletion
+- [ ] Deleting staff with "login only" keeps the auth user
+- [ ] Deleting staff with "record + login" removes both
 
 ### Grading
 - [ ] Weighted score matches manual calculation
@@ -837,22 +875,36 @@ where email = 'user@supreme.edu.gh';
 
 Then sign out and back in.
 
+### Staff logs in as student
+**Cause:** The `provision-user` Edge Function didn't set `role` on the profiles row. The DB trigger defaults to `'student'`.
+**Fix:** Ensure the Edge Function includes `role` in the `update profiles` call. Then run:
+
+```sql
+update public.profiles p
+set role = (u.raw_app_meta_data ->> 'role')::user_role
+from auth.users u
+where u.id = p.id
+  and u.raw_app_meta_data ->> 'role' is not null
+  and p.role <> (u.raw_app_meta_data ->> 'role')::user_role;
+```
+
+### Stuck on `/change-password` after changing
+**Cause:** `AuthContext.user.mustChangePassword` wasn't refreshed.
+**Fix:** The `ChangePasswordPage` must `await refreshUser()` before navigating. The `AuthContext` must expose `refreshUser`.
+
 ### "Cannot find module" for a Supabase service
 **Cause:** file wasn't created or has case mismatch.
-**Fix:** `dir src\services\supabase` — confirm the file exists with the exact
-casing you import.
+**Fix:** `dir src\services\supabase` — confirm the file exists with the exact casing you import.
 
 ### Netlify build fails on `ignoreDeprecations`
 **Cause:** the TS version differs between local and Netlify.
-**Fix:** pin `"typescript": "6.0.3"` in `package.json` (exact, no caret) and
-keep `"ignoreDeprecations": "6.0"` in `tsconfig.app.json`.
+**Fix:** pin `"typescript": "6.0.3"` in `package.json` (exact, no caret) and keep `"ignoreDeprecations": "6.0"` in `tsconfig.app.json`.
 
 ### Scratch-card PIN is rejected
 - Verify the PIN was typed correctly (8 digits)
 - Verify the card is for the currently selected term
 - Verify the card hasn't been used 3 times
-- Check `scratch_cards` row in Supabase for `invalidated_at` or
-  `uses_remaining = 0`
+- Check `scratch_cards` row in Supabase for `invalidated_at` or `uses_remaining = 0`
 
 ### Edge Function returns 401
 **Cause:** caller's JWT is stale.
@@ -873,14 +925,10 @@ set must_change_password = false
 where id = 'USER-ID';
 ```
 
-### Forced password change loops
-**Cause:** The RLS policy blocks the flag update because it's already `false`.
-Check with:
-```sql
-select id, email, must_change_password
-from public.profiles
-where email like '%tch001%';
-```
+### Password reset email never arrives
+**Cause:** Supabase default SMTP is rate-limited to 2 emails/hour and only
+delivers to project team members.
+**Fix:** Configure custom SMTP (see [Custom SMTP](#custom-smtp)).
 
 ---
 
@@ -890,7 +938,6 @@ where email like '%tch001%';
 - **Attendance module** (schema exists, UI disabled)
 - **Notifications** (in-app + email)
 - **Parent portal** (read-only access to their child's data)
-- **Bulk student import** (CSV)
 - **Photo uploads** (Supabase Storage)
 - **Timetable management**
 - **Library & inventory**
@@ -899,6 +946,7 @@ where email like '%tch001%';
 - SMS notifications for fees due
 - Integration with Ghana Education Service reporting
 - Multi-campus support (would require schema changes)
+- Remove teaching assignments module (deferred)
 
 ---
 
