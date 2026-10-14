@@ -21,8 +21,8 @@ import {
 } from "@/services/supabase/student-import";
 
 const SAMPLE_CSV = `first_name,last_name,other_names,date_of_birth,gender,nationality,division,class_name,academic_year,admission_date,address,previous_school,guardian_name,guardian_relationship,guardian_phone,guardian_email,guardian_address,guardian_is_emergency
-Kwame,Mensah,,2013-05-14,male,Ghanaian,jhs,JHS 1,2024/2025,2022-09-05,"12 Adenta, Accra",,Akosua Mensah,mother,+233245550101,akosua@example.com,"12 Adenta, Accra",true
-Ama,Owusu,,2014-11-22,female,Ghanaian,jhs,JHS 2,2024/2025,2023-09-04,"5 East Legon, Accra",,Kojo Owusu,father,+233205550202,,"5 East Legon, Accra",true`;
+Kwame,Mensah,,2013-05-14,male,Ghanaian,jhs,JHS1,2024/2025,2022-09-05,"12 Adenta, Accra",,Akosua Mensah,mother,+233245550101,akosua@example.com,"12 Adenta, Accra",true
+Ama,Owusu,,2014-11-22,female,Ghanaian,jhs,JHS2,2024/2025,2023-09-04,"5 East Legon, Accra",,Kojo Owusu,father,+233205550202,,"5 East Legon, Accra",true`;
 
 export default function StudentImportPage() {
   const navigate = useNavigate();
@@ -48,24 +48,24 @@ export default function StudentImportPage() {
       return;
     }
 
- let objects = rowsToObjects(parsed);
- if (objects.length === 0) {
-   setParseError("No data rows found.");
-   return;
- }
+    let objects = rowsToObjects(parsed);
+    if (objects.length === 0) {
+      setParseError("No data rows found.");
+      return;
+    }
 
- // Sort by last_name, then first_name (case-insensitive)
- objects = objects.slice().sort((a, b) => {
-   const aLast = (a.last_name ?? "").trim().toLowerCase();
-   const bLast = (b.last_name ?? "").trim().toLowerCase();
-   if (aLast !== bLast) return aLast < bLast ? -1 : 1;
+    // Sort by last_name, then first_name (case-insensitive)
+    objects = objects.slice().sort((a, b) => {
+      const aLast = (a.last_name ?? "").trim().toLowerCase();
+      const bLast = (b.last_name ?? "").trim().toLowerCase();
+      if (aLast !== bLast) return aLast < bLast ? -1 : 1;
 
-   const aFirst = (a.first_name ?? "").trim().toLowerCase();
-   const bFirst = (b.first_name ?? "").trim().toLowerCase();
-   if (aFirst !== bFirst) return aFirst < bFirst ? -1 : 1;
+      const aFirst = (a.first_name ?? "").trim().toLowerCase();
+      const bFirst = (b.first_name ?? "").trim().toLowerCase();
+      if (aFirst !== bFirst) return aFirst < bFirst ? -1 : 1;
 
-   return 0;
- });
+      return 0;
+    });
 
     setFileName(file.name);
     setValidating(true);
@@ -164,6 +164,14 @@ export default function StudentImportPage() {
               <p className="mt-2">
                 Optional: other_names, nationality, previous_school,
                 guardian_email, guardian_is_emergency
+              </p>
+              <p className="mt-2">
+                The <code className="font-mono">class_name</code> must match an
+                existing class exactly — e.g.{" "}
+                <code className="font-mono">Nursery1</code>,{" "}
+                <code className="font-mono">KG2</code>,{" "}
+                <code className="font-mono">Primary4</code>,{" "}
+                <code className="font-mono">JHS1</code>.
               </p>
               <p className="mt-2">
                 Download the sample CSV to see the exact format.

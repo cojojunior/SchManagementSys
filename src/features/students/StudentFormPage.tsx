@@ -12,6 +12,9 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { studentsService } from "@/services/supabase/student";
+import { useLookup } from "@/hooks/useLookup";
+import { classesService } from "@/services/supabase/classes";
+import type { Division } from "@/types/common";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -46,6 +49,23 @@ export default function StudentFormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Load classes for the dropdown
+  const { data: classes } = useLookup(async () => {
+    const res = await classesService.list({ status: "active" }, 1, 200);
+    const order: Record<string, number> = {
+      nursery: 0,
+      kg: 1,
+      primary: 2,
+      jhs: 3,
+    };
+    return res.data.slice().sort((a, b) => {
+      const da = order[a.division] ?? 99;
+      const db = order[b.division] ?? 99;
+      if (da !== db) return da - db;
+      return a.level - b.level;
+    });
+  });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -59,6 +79,9 @@ export default function StudentFormPage() {
       },
     },
   });
+
+  const { register, handleSubmit, formState, watch, setValue } = form;
+  const { errors } = formState;
 
   useEffect(() => {
     if (!id) return;
@@ -90,6 +113,16 @@ export default function StudentFormPage() {
     });
   }, [id, form]);
 
+  // Auto-fill division when a class is picked
+  const selectedClassId = watch("classId");
+  useEffect(() => {
+    if (!selectedClassId || classes.length === 0) return;
+    const cls = classes.find((c) => c.id === selectedClassId);
+    if (cls) {
+      setValue("division", cls.division as Division, { shouldValidate: true });
+    }
+  }, [selectedClassId, classes, setValue]);
+
   async function onSubmit(values: FormValues) {
     setSubmitting(true);
     setFormError(null);
@@ -106,9 +139,6 @@ export default function StudentFormPage() {
       setSubmitting(false);
     }
   }
-
-  const { register, handleSubmit, formState } = form;
-  const { errors } = formState;
 
   return (
     <>
@@ -173,10 +203,25 @@ export default function StudentFormPage() {
                   invalid={!!errors.nationality}
                 />
               </FormField>
+
+              {/* Class dropdown — populated from the classes table */}
+              <FormField label="Class" required error={errors.classId?.message}>
+                <Select {...register("classId")} invalid={!!errors.classId}>
+                  <option value="">Select a class…</option>
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+
+              {/* Division auto-fills from the class */}
               <FormField
                 label="Division"
                 required
-                error={errors.division?.message}>
+                error={errors.division?.message}
+                hint="Auto-filled when you pick a class">
                 <Select {...register("division")}>
                   <option value="nursery">Nursery</option>
                   <option value="kg">KG</option>
@@ -184,17 +229,7 @@ export default function StudentFormPage() {
                   <option value="jhs">JHS</option>
                 </Select>
               </FormField>
-              <FormField
-                label="Class"
-                required
-                error={errors.classId?.message}
-                hint="e.g. cls-pri4, cls-jhs2, cls-nur1, cls-kg1">
-                <Input
-                  placeholder="e.g. cls-pri4"
-                  {...register("classId")}
-                  invalid={!!errors.classId}
-                />
-              </FormField>
+
               <FormField label="Stream" error={errors.stream?.message}>
                 <Input placeholder="Optional" {...register("stream")} />
               </FormField>
