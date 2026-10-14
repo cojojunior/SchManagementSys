@@ -12,7 +12,7 @@ import { ROLE_HOME, type Role } from "@/lib/constants";
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth(); // ← added refreshUser
 
   const forced = user?.mustChangePassword === true;
 
@@ -48,7 +48,6 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      // Only verify the current password if the user is doing a voluntary change
       if (!forced) {
         const { error: verifyError } = await supabase.auth.signInWithPassword({
           email: current.email,
@@ -60,7 +59,6 @@ export default function ChangePasswordPage() {
         }
       }
 
-      // Update the password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -69,13 +67,11 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      // Clear the forced flag if set
       await supabase
         .from("profiles")
         .update({ must_change_password: false })
         .eq("id", current.id);
 
-      // Audit
       await supabase.from("audit_log").insert({
         actor_id: current.id,
         actor_name: current.email,
@@ -91,8 +87,11 @@ export default function ChangePasswordPage() {
     }
   }
 
-  function handleSuccessClose() {
+  async function handleSuccessClose() {
     setSuccess(false);
+    // Refresh the auth context so mustChangePassword clears
+    // BEFORE we navigate — otherwise RequireRole bounces us back here.
+    await refreshUser();
     const role = user?.role as Role | undefined;
     navigate(role ? ROLE_HOME[role] : "/", { replace: true });
   }
@@ -173,7 +172,9 @@ export default function ChangePasswordPage() {
 
       <SuccessDialog
         open={success}
-        onClose={handleSuccessClose}
+        onClose={() => {
+          void handleSuccessClose();
+        }}
         title="Password created successfully"
         message="You're all set. Click OK to continue to your dashboard."
         buttonLabel="OK"
