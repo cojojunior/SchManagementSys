@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Ban, UserPlus } from "lucide-react";
+import { ArrowLeft, Ban, UserPlus, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Dialog } from "@/components/ui/Dialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
@@ -40,10 +41,16 @@ export default function ScratchCardDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const canSeePin = user?.role === "super_admin" || user?.role === "secretary";
+  const canHardDelete = user?.role === "super_admin";
+
   const [card, setCard] = useState<ScratchCard | null>(null);
   const [usages, setUsages] = useState<ScratchCardUsage[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteWorking, setDeleteWorking] = useState(false);
 
   const [issueOpen, setIssueOpen] = useState(false);
   const [issueStudentId, setIssueStudentId] = useState("");
@@ -84,6 +91,17 @@ export default function ScratchCardDetailPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!card) return;
+    setDeleteWorking(true);
+    try {
+      await scratchCardsService.remove(card.id, { hard: true });
+      navigate("/admin/scratch-cards");
+    } finally {
+      setDeleteWorking(false);
+    }
+  }
+
   async function handleInvalidate() {
     if (!card || !invalidateReason) return;
     setWorking(true);
@@ -115,10 +133,16 @@ export default function ScratchCardDetailPage() {
   const canIssue = card.status !== "invalidated" && !card.issuedToStudentId;
   const canInvalidate = card.status !== "invalidated";
 
+  const pinDisplay =
+    canSeePin && card.pinPlain ? card.pinPlain : card.maskedPin;
+
+  const issuedByDisplay =
+    card.issuedByName ?? (card.issuedBy ? "Unknown user" : "—");
+
   return (
     <>
       <PageHeader
-        title={card.serialNumber}
+        title={card.pinPlain ?? card.serialNumber}
         description={`${card.division.toUpperCase()} · ${card.termName} ${card.academicYear}`}
         action={
           <div className="flex items-center gap-2">
@@ -148,6 +172,17 @@ export default function ScratchCardDetailPage() {
                 </Button>
               </RoleGate>
             )}
+            {canHardDelete && (
+              <RoleGate resource="scratch_cards" action="delete">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setDeleteOpen(true)}>
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </RoleGate>
+            )}
           </div>
         }
       />
@@ -157,7 +192,7 @@ export default function ScratchCardDetailPage() {
           <CardHeader title="Card details" />
           <CardBody className="grid gap-4 sm:grid-cols-2">
             <Field label="Serial number" value={card.serialNumber} mono />
-            <Field label="PIN" value={card.maskedPin} mono />
+            <Field label="PIN" value={pinDisplay} mono />
             <Field label="Division" value={card.division.toUpperCase()} />
             <Field
               label="Term"
@@ -178,7 +213,7 @@ export default function ScratchCardDetailPage() {
               label="Issued at"
               value={card.issuedAt ? formatDate(card.issuedAt) : "—"}
             />
-            <Field label="Issued by" value={card.issuedBy ?? "—"} />
+            <Field label="Issued by" value={issuedByDisplay} />
             <div className="sm:col-span-2">
               <div className="text-xs text-ink-500 mb-1">Status</div>
               <Badge tone={STATUS_TONE[card.status] ?? "neutral"}>
@@ -212,7 +247,7 @@ export default function ScratchCardDetailPage() {
               </li>
               <li>Cannot be used across divisions or academic years.</li>
               <li>Invalidated cards are permanently blocked.</li>
-              <li>Usage counting is enforced server-side in production.</li>
+              <li>Usage counting is enforced server-side.</li>
             </ul>
           </CardBody>
         </Card>
@@ -325,6 +360,18 @@ export default function ScratchCardDetailPage() {
           />
         </FormField>
       </Dialog>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        loading={deleteWorking}
+        title="Permanently delete card?"
+        message={`Removes ${card.pinPlain ?? card.serialNumber} from the database. This cannot be undone.`}
+        confirmLabel="Permanently delete"
+        danger
+      />
     </>
   );
 }

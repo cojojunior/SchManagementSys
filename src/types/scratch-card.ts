@@ -7,12 +7,9 @@ export type ScratchCard = {
   id: UUID;
   serialNumber: string;
   pinHash: string;
+  /** The plaintext PIN (== serialNumber). Visible to Super Admin + Secretary. */
+  pinPlain?: string;
   maskedPin: string;
-  /**
-   * Mock-only field. In production the raw PIN is NEVER stored — only its hash.
-   * Remove this field when we wire Supabase.
-   */
-  rawPinForMock?: string;
   division: Division;
   termId: UUID;
   termName: string;
@@ -23,7 +20,10 @@ export type ScratchCard = {
   issuedToStudentId?: UUID;
   issuedToStudentName?: string;
   issuedAt?: string;
+  /** UUID of the profile that issued the card */
   issuedBy?: string;
+  /** Display name of the person who issued the card */
+  issuedByName?: string;
   invalidatedAt?: string;
   invalidatedReason?: string;
   createdAt: string;
@@ -39,16 +39,14 @@ export type ScratchCardUsage = {
   termId: UUID;
   termName: string;
   accessedAt: string;
-  ipAddress?: string;
-  userAgent?: string;
 };
 
 export type ScratchCardFormValues = {
   division: Division;
   termId: UUID;
   academicYear: string;
-  quantity: number; // how many cards to generate at once
-  priceOverride?: number; // optional — default from division
+  quantity: number;
+  priceOverride?: number;
 };
 
 export type ScratchCardFilters = {
@@ -63,7 +61,7 @@ export type ScratchCardIssueValues = {
   studentId: UUID;
 };
 
-// Default prices per division (configurable by Super Admin in a future Settings module)
+/** Default prices per division (editable by Super Admin in Settings). */
 export const SCRATCH_CARD_PRICES: Record<Division, number> = {
   nursery: 10,
   kg: 10,

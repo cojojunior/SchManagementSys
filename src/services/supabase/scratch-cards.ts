@@ -1,4 +1,5 @@
 import { requireSupabase } from "@/lib/supabase";
+import { pickOne } from "@/lib/pick-one";
 import type {
   ScratchCard,
   ScratchCardFilters,
@@ -8,10 +9,13 @@ import type {
 } from "@/types/scratch-card";
 import type { Paginated } from "@/types/common";
 
+type Joined<T> = T | T[] | null;
+
 type DbCard = {
   id: string;
   serial_number: string;
   pin_hash: string;
+  pin_plain: string | null;
   masked_pin: string;
   division: "nursery" | "kg" | "primary" | "jhs";
   term_id: string;
@@ -26,8 +30,9 @@ type DbCard = {
   invalidated_reason: string | null;
   created_at: string;
   updated_at: string;
-  terms?: { name: string } | null;
-  students?: { first_name: string; last_name: string } | null;
+  terms?: Joined<{ name: string }>;
+  students?: Joined<{ first_name: string; last_name: string }>;
+  issuedByProfile?: Joined<{ full_name: string }>;
 };
 
 type DbUsage = {
@@ -36,23 +41,31 @@ type DbUsage = {
   student_id: string;
   term_id: string;
   accessed_at: string;
-  students?: { first_name: string; last_name: string } | null;
-  terms?: { name: string } | null;
-  scratch_cards?: { serial_number: string } | null;
+  students?: Joined<{ first_name: string; last_name: string }>;
+  terms?: Joined<{ name: string }>;
+  scratch_cards?: Joined<{ serial_number: string }>;
 };
 
-const SELECT = "*, terms(name), students(first_name, last_name)";
+const SELECT = `
+  *,
+  terms(name),
+  students(first_name, last_name),
+  issuedByProfile:profiles!scratch_cards_issued_by_fkey(full_name)
+`;
 
 function toDomain(row: DbCard): ScratchCard {
-  const st = row.students;
+  const st = pickOne(row.students);
+  const term = pickOne(row.terms);
+  const issuer = pickOne(row.issuedByProfile);
   return {
     id: row.id,
     serialNumber: row.serial_number,
     pinHash: row.pin_hash,
+    pinPlain: row.pin_plain ?? undefined,
     maskedPin: row.masked_pin,
     division: row.division,
     termId: row.term_id,
-    termName: row.terms?.name ?? "—",
+    termName: term?.name ?? "—",
     academicYear: row.academic_year,
     price: Number(row.price),
     status: row.status,
@@ -61,6 +74,7 @@ function toDomain(row: DbCard): ScratchCard {
     issuedToStudentName: st ? `${st.first_name} ${st.last_name}` : undefined,
     issuedAt: row.issued_at ?? undefined,
     issuedBy: row.issued_by ?? undefined,
+    issuedByName: issuer?.full_name ?? undefined,
     invalidatedAt: row.invalidated_at ?? undefined,
     invalidatedReason: row.invalidated_reason ?? undefined,
     createdAt: row.created_at,
@@ -118,9 +132,47 @@ export const scratchCardsService = {
     return data ? toDomain(data as unknown as DbCard) : null;
   },
 
-  async generate(
-    values: ScratchCardFormValues,
-  ): Promise<Array<ScratchCard & { rawPin: string }>> {
+  /**
+   * Summary: total cards, total value, broken down by division.
+   */
+  async summary(): Promise<{
+    totalCards: number;
+    totalValue: number;
+    byDivision: Array<{ division: string; count: number; value: number }>;
+  }> {
+    const supabase = requireSupabase();
+    const { data, error } = await supabase
+      .from("scratch_cards")
+      .select("division, price");
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []) as Array<{ division: string; price: number }>;
+    const map = new Map<string, { count: number; value: number }>();
+    let totalValue = 0;
+
+    for (const r of rows) {
+      const price = Number(r.price);
+      totalValue += price;
+      const cur = map.get(r.division) ?? { count: 0, value: 0 };
+      cur.count += 1;
+      cur.value += price;
+      map.set(r.division, cur);
+    }
+
+    return {
+      totalCards: rows.length,
+      totalValue,
+      byDivision: Array.from(map.entries())
+        .map(([division, v]) => ({ division, ...v }))
+        .sort((a, b) => a.division.localeCompare(b.division)),
+    };
+  },
+
+  /**
+   * Generate N cards via the Edge Function.
+   * Returns the created cards. PIN == serial.
+   */
+  async generate(values: ScratchCardFormValues): Promise<ScratchCard[]> {
     const supabase = requireSupabase();
 
     const { data, error } = await supabase.functions.invoke<{
@@ -129,7 +181,6 @@ export const scratchCardsService = {
       cards?: Array<{
         id: string;
         serialNumber: string;
-        rawPin: string;
         price: number;
       }>;
     }>("generate-scratch-cards", {
@@ -147,11 +198,11 @@ export const scratchCardsService = {
       throw new Error(data?.reason ?? "Could not generate cards");
     }
 
-    // Build minimal ScratchCard rows for the UI to display
     return data.cards.map((c) => ({
       id: c.id,
       serialNumber: c.serialNumber,
       pinHash: "",
+      pinPlain: c.serialNumber, // PIN == serial
       maskedPin: "••••",
       division: values.division,
       termId: values.termId,
@@ -162,7 +213,6 @@ export const scratchCardsService = {
       usesRemaining: 3,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      rawPin: c.rawPin,
     }));
   },
 
@@ -202,13 +252,29 @@ export const scratchCardsService = {
     return (await this.get(cardId))!;
   },
 
-  async remove(id: string): Promise<void> {
+  /**
+   * Delete a scratch card. Uses the `delete-scratch-card` Edge Function.
+   * `hard: true` permanently removes it (Super Admin only).
+   * `hard: false` (default) soft-invalidates it.
+   */
+  async remove(
+    id: string,
+    options: { hard?: boolean } = {},
+  ): Promise<{ hardDeleted: boolean }> {
     const supabase = requireSupabase();
-    const { error } = await supabase
-      .from("scratch_cards")
-      .delete()
-      .eq("id", id);
+    const { data, error } = await supabase.functions.invoke<{
+      ok: boolean;
+      reason?: string;
+      hardDeleted?: boolean;
+    }>("delete-scratch-card", {
+      body: { cardId: id, hard: options.hard ?? false },
+    });
+
     if (error) throw new Error(error.message);
+    if (!data?.ok) {
+      throw new Error(data?.reason ?? "Could not delete card");
+    }
+    return { hardDeleted: data.hardDeleted ?? false };
   },
 
   async listUsages(cardId: string): Promise<ScratchCardUsage[]> {
@@ -225,13 +291,13 @@ export const scratchCardsService = {
     return (data as unknown as DbUsage[]).map((u) => ({
       id: u.id,
       cardId: u.card_id,
-      serialNumber: u.scratch_cards?.serial_number ?? "—",
+      serialNumber: pickOne(u.scratch_cards)?.serial_number ?? "—",
       studentId: u.student_id,
       studentName: u.students
-        ? `${u.students.first_name} ${u.students.last_name}`
+        ? `${pickOne(u.students)?.first_name} ${pickOne(u.students)?.last_name}`
         : "Unknown",
       termId: u.term_id,
-      termName: u.terms?.name ?? "—",
+      termName: pickOne(u.terms)?.name ?? "—",
       accessedAt: u.accessed_at,
     }));
   },
@@ -249,13 +315,13 @@ export const scratchCardsService = {
     return (data as unknown as DbUsage[]).map((u) => ({
       id: u.id,
       cardId: u.card_id,
-      serialNumber: u.scratch_cards?.serial_number ?? "—",
+      serialNumber: pickOne(u.scratch_cards)?.serial_number ?? "—",
       studentId: u.student_id,
       studentName: u.students
-        ? `${u.students.first_name} ${u.students.last_name}`
+        ? `${pickOne(u.students)?.first_name} ${pickOne(u.students)?.last_name}`
         : "Unknown",
       termId: u.term_id,
-      termName: u.terms?.name ?? "—",
+      termName: pickOne(u.terms)?.name ?? "—",
       accessedAt: u.accessed_at,
     }));
   },
