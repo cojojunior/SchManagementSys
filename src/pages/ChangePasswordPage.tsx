@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { KeyRound, CheckCircle2 } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
+import { SuccessDialog } from "@/components/ui/SuccessDialog";
 import { useAuth } from "@/features/auth/AuthContext";
 import { requireSupabase } from "@/lib/supabase";
 import { ROLE_HOME, type Role } from "@/lib/constants";
@@ -13,12 +14,14 @@ export default function ChangePasswordPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const forced = user?.mustChangePassword === true;
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
-  const [done, setDone] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +32,7 @@ export default function ChangePasswordPage() {
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match.");
+      setError("Passwords do not match.");
       return;
     }
 
@@ -37,7 +40,6 @@ export default function ChangePasswordPage() {
     try {
       const supabase = requireSupabase();
 
-      // Verify the current password by re-authenticating.
       const {
         data: { user: current },
       } = await supabase.auth.getUser();
@@ -46,16 +48,19 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: current.email,
-        password: currentPassword,
-      });
-      if (verifyError) {
-        setError("Current password is incorrect.");
-        return;
+      // Only verify the current password if the user is doing a voluntary change
+      if (!forced) {
+        const { error: verifyError } = await supabase.auth.signInWithPassword({
+          email: current.email,
+          password: currentPassword,
+        });
+        if (verifyError) {
+          setError("Current password is incorrect.");
+          return;
+        }
       }
 
-      // Update to the new password.
+      // Update the password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -64,24 +69,32 @@ export default function ChangePasswordPage() {
         return;
       }
 
-      // Clear the must_change_password flag.
-      const { error: flagError } = await supabase
+      // Clear the forced flag if set
+      await supabase
         .from("profiles")
         .update({ must_change_password: false })
         .eq("id", current.id);
-      if (flagError) {
-        // Non-fatal — log it but continue
-        console.warn("Could not clear flag:", flagError.message);
-      }
 
-      setDone(true);
-      setTimeout(() => {
-        const role = user?.role as Role | undefined;
-        navigate(role ? ROLE_HOME[role] : "/", { replace: true });
-      }, 1200);
+      // Audit
+      await supabase.from("audit_log").insert({
+        actor_id: current.id,
+        actor_name: current.email,
+        action: "password_changed",
+        entity: "profiles",
+        entity_id: current.id,
+        after_value: { forced },
+      });
+
+      setSuccess(true);
     } finally {
       setWorking(false);
     }
+  }
+
+  function handleSuccessClose() {
+    setSuccess(false);
+    const role = user?.role as Role | undefined;
+    navigate(role ? ROLE_HOME[role] : "/", { replace: true });
   }
 
   return (
@@ -90,24 +103,20 @@ export default function ChangePasswordPage() {
         <CardBody className="space-y-6 p-6">
           <div className="text-center">
             <div className="mx-auto h-14 w-14 rounded-2xl bg-brand-600 text-white grid place-items-center">
-              {done ? (
-                <CheckCircle2 className="h-6 w-6" />
-              ) : (
-                <KeyRound className="h-6 w-6" />
-              )}
+              <KeyRound className="h-6 w-6" />
             </div>
             <h1 className="mt-3 text-xl font-semibold">
-              {done ? "Password updated" : "Set a new password"}
+              {forced ? "Set a new password" : "Change password"}
             </h1>
             <p className="text-sm text-ink-500 mt-1">
-              {done
-                ? "Redirecting you now…"
-                : "Choose a strong password to replace the temporary one"}
+              {forced
+                ? "Your account is set with a temporary password. Choose a new one."
+                : "Enter your current password, then choose a new one."}
             </p>
           </div>
 
-          {!done && (
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!forced && (
               <FormField label="Current password" required>
                 <Input
                   type="password"
@@ -116,48 +125,62 @@ export default function ChangePasswordPage() {
                   autoComplete="current-password"
                 />
               </FormField>
-              <FormField
-                label="New password"
-                required
-                hint="At least 8 characters">
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  autoComplete="new-password"
-                />
-              </FormField>
-              <FormField label="Confirm new password" required>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                />
-              </FormField>
+            )}
 
-              {error && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-                  {error}
-                </div>
-              )}
+            <FormField
+              label="New password"
+              required
+              hint="At least 8 characters">
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </FormField>
 
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={
-                  working ||
-                  !currentPassword ||
-                  !newPassword ||
-                  !confirmPassword
-                }>
-                {working ? "Updating…" : "Update password"}
-              </Button>
-            </form>
-          )}
+            <FormField label="Confirm new password" required>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </FormField>
+
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={
+                working ||
+                (!forced && !currentPassword) ||
+                !newPassword ||
+                !confirmPassword
+              }>
+              {working
+                ? "Saving…"
+                : forced
+                  ? "Set new password"
+                  : "Update password"}
+            </Button>
+          </form>
         </CardBody>
       </Card>
+
+      <SuccessDialog
+        open={success}
+        onClose={handleSuccessClose}
+        title="Password created successfully"
+        message="You're all set. Click OK to continue to your dashboard."
+        buttonLabel="OK"
+      />
     </div>
   );
 }

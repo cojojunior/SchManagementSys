@@ -61,6 +61,8 @@ import PrivacyPage from "@/pages/legal/PrivacyPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import StudentImportPage from "@/features/students/StudentImportPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 export default function App() {
   return (
@@ -68,13 +70,14 @@ export default function App() {
       <Routes>
         {/* ============ Public routes ============ */}
         <Route path="/login" element={<StaffLoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />
         <Route path="/student/activate" element={<StudentActivatePage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/" element={<LandingPage />} />
-
         {/* ============ Authenticated shell ============ */}
         <Route
           element={

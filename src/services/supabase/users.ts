@@ -120,6 +120,19 @@ export const usersService = {
     if (error) throw new Error(error.message);
   },
 
+  async resetToDefault(userId: string): Promise<void> {
+    const supabase = requireSupabase();
+    const { data, error } = await supabase.functions.invoke<{
+      ok: boolean;
+      reason?: string;
+    }>("reset-staff-password", { body: { userId } });
+
+    if (error) throw new Error(error.message);
+    if (!data?.ok) {
+      throw new Error(data?.reason ?? "Could not reset password");
+    }
+  },
+
   async roleHistory(profileId: string): Promise<RoleChangeLogEntry[]> {
     const supabase = requireSupabase();
     const { data, error } = await supabase

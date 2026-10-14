@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Ban, CheckCircle2, Pause } from "lucide-react";
+import { ArrowLeft, Ban, CheckCircle2, Pause, RotateCcw } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { SuccessDialog } from "@/components/ui/SuccessDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { usersService } from "@/services/supabase/users";
 import type { UserProfile, RoleChangeLogEntry } from "@/types/users";
@@ -24,6 +25,9 @@ export default function UserDetailPage() {
   const [pending, setPending] = useState<PendingAction>(null);
   const [working, setWorking] = useState(false);
 
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   async function reload() {
     setLoading(true);
     const [u, h] = await Promise.all([
@@ -40,7 +44,7 @@ export default function UserDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function handleAction() {
+  async function handleStatusAction() {
     if (!pending || !user) return;
     setWorking(true);
     try {
@@ -52,6 +56,19 @@ export default function UserDetailPage() {
             : "archived";
       await usersService.setStatus(user.id, status);
       setPending(null);
+      await reload();
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function handleResetPassword() {
+    if (!user) return;
+    setWorking(true);
+    try {
+      await usersService.resetToDefault(user.id);
+      setResetOpen(false);
+      setResetSuccess(true);
       await reload();
     } finally {
       setWorking(false);
@@ -78,13 +95,23 @@ export default function UserDetailPage() {
         title={user.fullName || user.email}
         description={user.email}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
 
             <RoleGate resource="users" action="update">
+              {user.role !== "super_admin" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setResetOpen(true)}>
+                  <RotateCcw className="h-4 w-4" />
+                  Reset password
+                </Button>
+              )}
+
               {user.status !== "active" && (
                 <Button
                   variant="secondary"
@@ -147,20 +174,29 @@ export default function UserDetailPage() {
         </Card>
 
         <Card>
-          <CardHeader title="Linked records" />
+          <CardHeader title="Password" />
           <CardBody className="space-y-3 text-sm">
-            {user.staffId ? (
-              <Link
-                to={`/admin/staff/${user.staffId}`}
-                className="text-brand-600 hover:underline">
-                View staff record →
-              </Link>
-            ) : (
-              <p className="text-ink-500">Not linked to a staff record.</p>
-            )}
-            {user.studentId && (
-              <p className="text-ink-500 text-xs">
-                Student ID: {user.studentId}
+            <p className="text-ink-600">
+              Reset this user&apos;s password back to{" "}
+              <code className="text-xs bg-ink-100 px-1.5 py-0.5 rounded font-mono">
+                Password1
+              </code>
+              . They&apos;ll be forced to choose a new one on their next login.
+            </p>
+            <RoleGate resource="users" action="update">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-full"
+                onClick={() => setResetOpen(true)}
+                disabled={user.role === "super_admin"}>
+                <RotateCcw className="h-4 w-4" />
+                Reset password
+              </Button>
+            </RoleGate>
+            {user.role === "super_admin" && (
+              <p className="text-xs text-ink-500">
+                Super Admin passwords can only be reset in Supabase.
               </p>
             )}
           </CardBody>
@@ -222,7 +258,7 @@ export default function UserDetailPage() {
       <ConfirmDialog
         open={pending !== null}
         onClose={() => setPending(null)}
-        onConfirm={handleAction}
+        onConfirm={handleStatusAction}
         loading={working}
         title={
           pending === "activate"
@@ -246,6 +282,23 @@ export default function UserDetailPage() {
               : "Archive"
         }
         danger={pending === "archive"}
+      />
+
+      <ConfirmDialog
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onConfirm={handleResetPassword}
+        loading={working}
+        title="Reset password?"
+        message={`The password will be reset to "Password1" and the user will be forced to create a new one on their next login.`}
+        confirmLabel="Reset password"
+      />
+
+      <SuccessDialog
+        open={resetSuccess}
+        onClose={() => setResetSuccess(false)}
+        title="Password reset"
+        message="The user's password has been reset to Password1. They will be prompted to set a new password when they next sign in."
       />
     </>
   );

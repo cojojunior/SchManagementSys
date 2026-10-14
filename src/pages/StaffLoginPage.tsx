@@ -111,6 +111,13 @@ export default function StaffLoginPage() {
               Student sign in
             </Link>
           </div>
+          <div className="text-center text-sm">
+            <Link
+              to="/forgot-password"
+              className="text-brand-600 hover:underline text-sm">
+              Forgot password?
+            </Link>
+          </div>
           <div className="text-center">
             <Link
               to="/"
