@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Search, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
+import { RoleGate } from "@/features/auth/RoleGate";
 import {
   Table,
   THead,
@@ -16,6 +17,7 @@ import {
   TD,
   TableEmpty,
 } from "@/components/ui/Table";
+import { Upload } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { studentsService } from "@/services/supabase/student";
 import type { Student, StudentFilters } from "@/types/student";
@@ -53,24 +55,32 @@ export default function StudentListPage() {
     };
   }, [debouncedSearch, filters.division, filters.status, page]);
 
-  const divisionCounts = useMemo(() => {
-    return {
-      all: total,
-    };
-  }, [total]);
+
 
   return (
     <>
       <PageHeader
         title="Students"
-        description={`${total} record${total === 1 ? "" : "s"} · showing ${divisionCounts.all}`}
+        description={`${total} record${total === 1 ? "" : "s"}`}
         action={
-          <Link to="/admin/students/new">
-            <Button>
-              <Plus className="h-4 w-4" />
-              Add student
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <RoleGate resource="students" action="create">
+              <Link to="import">
+                <Button variant="secondary">
+                  <Upload className="h-4 w-4" />
+                  Import CSV
+                </Button>
+              </Link>
+            </RoleGate>
+            <RoleGate resource="students" action="create">
+              <Link to="new">
+                <Button>
+                  <Plus className="h-4 w-4" />
+                  Add student
+                </Button>
+              </Link>
+            </RoleGate>
+          </div>
         }
       />
 

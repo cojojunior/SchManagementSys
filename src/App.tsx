@@ -60,6 +60,7 @@ import TermsPage from "@/pages/legal/TermsPage";
 import PrivacyPage from "@/pages/legal/PrivacyPage";
 import StaffLoginPage from "@/pages/StaffLoginPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
+import StudentImportPage from "@/features/students/StudentImportPage";
 
 export default function App() {
   return (
@@ -404,6 +405,14 @@ export default function App() {
             element={
               <RequireRole roles={["super_admin"]}>
                 <StudentListPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin/students/import"
+            element={
+              <RequireRole roles={["super_admin"]}>
+                <StudentImportPage />
               </RequireRole>
             }
           />
