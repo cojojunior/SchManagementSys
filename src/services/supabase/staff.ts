@@ -267,9 +267,24 @@ export const staffService = {
     return toDomain(data as unknown as DbStaff, profile as DbProfile | null);
   },
 
-  async remove(id: string): Promise<void> {
+  async remove(
+    id: string,
+    options: { deleteLogin?: boolean } = {},
+  ): Promise<{ loginDeleted: boolean }> {
     const supabase = requireSupabase();
-    const { error } = await supabase.from("staff").delete().eq("id", id);
+    const { data, error } = await supabase.functions.invoke<{
+      ok: boolean;
+      reason?: string;
+      loginDeleted?: boolean;
+    }>("delete-staff", {
+      body: { staffId: id, deleteLogin: options.deleteLogin ?? false },
+    });
+
     if (error) throw new Error(error.message);
+    if (!data?.ok) {
+      throw new Error(data?.reason ?? "Could not delete staff member");
+    }
+
+    return { loginDeleted: data.loginDeleted ?? false };
   },
 };

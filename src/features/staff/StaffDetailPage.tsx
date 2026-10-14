@@ -25,6 +25,7 @@ import { usersService } from "@/services/supabase/users";
 import type { Staff } from "@/types/staff";
 import { ROLE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/cn";
 
 const EMPLOYMENT_LABELS: Record<string, string> = {
   full_time: "Full-time",
@@ -39,8 +40,11 @@ export default function StaffDetailPage() {
   const navigate = useNavigate();
   const [staff, setStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState(true);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteWithLogin, setDeleteWithLogin] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [accessOpen, setAccessOpen] = useState(false);
   const [accessRole, setAccessRole] = useState<StaffRole>("teacher");
@@ -66,11 +70,21 @@ export default function StaffDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  function openDelete() {
+    setDeleteWithLogin(false);
+    setDeleteError(null);
+    setDeleteOpen(true);
+  }
+
   async function handleDelete() {
     setDeleting(true);
+    setDeleteError(null);
     try {
-      await staffService.remove(id);
+      await staffService.remove(id, { deleteLogin: deleteWithLogin });
+      setDeleteOpen(false);
       navigate(-1);
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeleting(false);
     }
@@ -93,10 +107,6 @@ export default function StaffDetailPage() {
         message: `${staff.firstName} ${staff.lastName} can now sign in with ${staff.email} using Password1 as the temporary password.`,
       });
       await reload();
-    } catch (e) {
-      // Show error inline in the dialog
-      setAccessWorking(false);
-      throw e;
     } finally {
       setAccessWorking(false);
     }
@@ -154,10 +164,7 @@ export default function StaffDetailPage() {
               </Link>
             </RoleGate>
             <RoleGate resource="staff" action="delete">
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => setConfirmOpen(true)}>
+              <Button variant="danger" size="sm" onClick={openDelete}>
                 <Trash2 className="h-4 w-4" />
                 Delete
               </Button>
@@ -186,7 +193,6 @@ export default function StaffDetailPage() {
           </CardBody>
         </Card>
 
-        {/* Portal access card — the one that does the real work */}
         <Card>
           <CardHeader
             title={
@@ -268,7 +274,6 @@ export default function StaffDetailPage() {
                   <Button
                     className="w-full"
                     onClick={() => {
-                      // Pre-select a sensible default based on job title
                       const t = staff.jobTitle.toLowerCase();
                       if (
                         t.includes("headmaster") ||
@@ -315,16 +320,106 @@ export default function StaffDetailPage() {
         </Card>
       </div>
 
-      <ConfirmDialog
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={handleDelete}
-        loading={deleting}
+      {/* Delete dialog with two options */}
+      <Dialog
+        open={deleteOpen}
+        onClose={() => {
+          if (!deleting) {
+            setDeleteOpen(false);
+            setDeleteError(null);
+          }
+        }}
         title="Delete staff member?"
-        message="Historical teaching assignments and results tied to this staff member are preserved."
-        confirmLabel="Delete"
-        danger
-      />
+        description={`This will remove ${staff.firstName} ${staff.lastName} from the staff list.`}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDeleteOpen(false);
+                setDeleteError(null);
+              }}
+              disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </>
+        }>
+        <div className="space-y-4">
+          {hasLogin ? (
+            <>
+              <p className="text-sm text-ink-700">
+                This staff member has a login ({staff.email}). What should
+                happen to it?
+              </p>
+
+              <label
+                className={cn(
+                  "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  deleteWithLogin
+                    ? "border-ink-200 hover:bg-ink-50"
+                    : "border-brand-400 bg-brand-50/60",
+                )}>
+                <input
+                  type="radio"
+                  name="delete-mode"
+                  checked={!deleteWithLogin}
+                  onChange={() => setDeleteWithLogin(false)}
+                  className="mt-0.5"
+                />
+                <div className="min-w-0">
+                  <div className="font-medium text-ink-900">
+                    Delete staff record only
+                  </div>
+                  <div className="text-xs text-ink-500 mt-0.5">
+                    The login stays active. They can still sign in, but they
+                    won&apos;t appear in the staff list.
+                  </div>
+                </div>
+              </label>
+
+              <label
+                className={cn(
+                  "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                  deleteWithLogin
+                    ? "border-red-400 bg-red-50/60"
+                    : "border-red-200 hover:bg-red-50/40",
+                )}>
+                <input
+                  type="radio"
+                  name="delete-mode"
+                  checked={deleteWithLogin}
+                  onChange={() => setDeleteWithLogin(true)}
+                  className="mt-0.5"
+                />
+                <div className="min-w-0">
+                  <div className="font-medium text-ink-900">
+                    Delete staff record AND login
+                  </div>
+                  <div className="text-xs text-ink-500 mt-0.5">
+                    Permanently removes the account. They can no longer sign in
+                    with {staff.email}. Their historical records (assigned
+                    classes, entered scores) are preserved.
+                  </div>
+                </div>
+              </label>
+            </>
+          ) : (
+            <p className="text-sm text-ink-700">
+              This staff member has no login. Deleting will only remove the
+              staff record.
+            </p>
+          )}
+
+          {deleteError && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {deleteError}
+            </div>
+          )}
+        </div>
+      </Dialog>
 
       {/* Give portal access dialog */}
       <Dialog
