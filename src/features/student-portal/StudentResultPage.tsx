@@ -117,8 +117,8 @@ export default function StudentResultsPage() {
                 <Input
                   type="text"
                   inputMode="numeric"
-                  placeholder="8-digit PIN"
-                  maxLength={8}
+                  placeholder="4-digit PIN"
+                  maxLength={4}
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                   className="font-mono text-lg tracking-widest text-center"
@@ -140,7 +140,7 @@ export default function StudentResultsPage() {
                 className="w-full"
                 size="lg"
                 onClick={handleRedeem}
-                disabled={verifying || pin.length < 6 || !termId}>
+                disabled={verifying || pin.length !== 4 || !termId}>
                 <Ticket className="h-4 w-4" />
                 {verifying ? "Verifying…" : "Unlock my results"}
               </Button>

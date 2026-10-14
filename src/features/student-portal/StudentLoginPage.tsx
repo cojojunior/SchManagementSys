@@ -57,13 +57,13 @@ export default function StudentLoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <FormField label="Admission number" required hint="e.g. SUAC001">
+            <FormField label="Admission number" required hint="e.g. SA001">
               <Input
                 value={admissionNumber}
                 onChange={(e) =>
                   setAdmissionNumber(e.target.value.toUpperCase())
                 }
-                placeholder="SUAC001"
+                placeholder="SA001"
                 autoComplete="username"
                 autoCapitalize="characters"
                 autoCorrect="off"
