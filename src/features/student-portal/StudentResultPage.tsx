@@ -103,7 +103,7 @@ export default function StudentResultsPage() {
                   <option value="">Select a term…</option>
                   {terms.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.name} — {t.academicYearId}
+                      {t.name} — {t.academicYearName ?? ""}
                       {t.isCurrent ? " (current)" : ""}
                     </option>
                   ))}
@@ -173,7 +173,7 @@ export default function StudentResultsPage() {
         title="My Results"
         description={
           unlockedTerm
-            ? `${student.className} · ${unlockedTerm.name} ${unlockedTerm.academicYearId}`
+            ? `${student.className} · ${unlockedTerm.name} ${unlockedTerm.academicYearName ?? ""}`
             : student.className
         }
         action={

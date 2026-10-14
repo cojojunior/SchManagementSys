@@ -5,6 +5,8 @@ export type TermName = "Term 1" | "Term 2" | "Term 3";
 export type AcademicTerm = {
   id: UUID;
   academicYearId: UUID;
+  /** Populated when the term is loaded via a join — for display only. */
+  academicYearName?: string;
   name: TermName;
   startDate: string; // ISO date
   endDate: string; // ISO date

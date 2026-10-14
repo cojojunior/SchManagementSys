@@ -61,17 +61,17 @@ export default function ScratchCardGeneratePage() {
     setSubmitting(true);
     setFormError(null);
     try {
-     const cards = await scratchCardsService.generate(values);
-     setGenerated(
-       cards.map((c) => ({
-         id: c.id,
-         serialNumber: c.serialNumber,
-         rawPin: c.serialNumber, // PIN == serial
-         division: c.division,
-         termName: c.termName,
-         price: c.price,
-       })),
-     );
+      const cards = await scratchCardsService.generate(values);
+      setGenerated(
+        cards.map((c) => ({
+          id: c.id,
+          serialNumber: c.serialNumber,
+          rawPin: c.serialNumber, // PIN == serial
+          division: c.division,
+          termName: c.termName,
+          price: c.price,
+        })),
+      );
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -163,7 +163,7 @@ export default function ScratchCardGeneratePage() {
                     <option value="">Select a term…</option>
                     {terms.map((t) => (
                       <option key={t.id} value={t.id}>
-                        {t.name} — {t.academicYearId}
+                        {t.name} — {t.academicYearName ?? ""}
                       </option>
                     ))}
                   </Select>

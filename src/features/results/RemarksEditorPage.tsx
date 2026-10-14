@@ -90,7 +90,7 @@ export default function RemarksEditorPage() {
     setFormError(null);
     try {
       const term = terms.find((t) => t.id === termIdFromUrl);
-      const year = term?.academicYearId ?? "—";
+      const year = term?.academicYearName ?? "—";
       const updated = await remarksService.setTeacherRemark(
         student.id,
         termIdFromUrl,
@@ -115,7 +115,7 @@ export default function RemarksEditorPage() {
     setFormError(null);
     try {
       const term = terms.find((t) => t.id === termIdFromUrl);
-      const year = term?.academicYearId ?? "—";
+      const year = term?.academicYearName ?? "—";
       const updated = await remarksService.setHeadmasterRemark(
         student.id,
         termIdFromUrl,
@@ -177,7 +177,7 @@ export default function RemarksEditorPage() {
               <option value="">Select a term…</option>
               {terms.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name} — {t.academicYearId}
+                  {t.name} — {t.academicYearName ?? ""}
                   {t.isCurrent ? " (current)" : ""}
                 </option>
               ))}

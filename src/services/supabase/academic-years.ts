@@ -167,35 +167,57 @@ export const academicYearsService = {
   // ---------- Terms ----------
   async listTerms(academicYearId?: string): Promise<AcademicTerm[]> {
     const supabase = requireSupabase();
-    let query = supabase.from("terms").select("*").order("name");
+    let query = supabase
+      .from("terms")
+      .select("*, academic_years(name)")
+      .order("name");
     if (academicYearId) {
       query = query.eq("academic_year_id", academicYearId);
     }
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    return (data as unknown as DbTerm[]).map(toTerm);
+
+    return (
+      data as unknown as Array<
+        DbTerm & { academic_years?: { name: string } | null }
+      >
+    ).map((row) => {
+      const term = toTerm(row);
+      term.academicYearName = row.academic_years?.name ?? "";
+      return term;
+    });
   },
 
   async getTerm(id: string): Promise<AcademicTerm | null> {
     const supabase = requireSupabase();
     const { data, error } = await supabase
       .from("terms")
-      .select("*")
+      .select("*, academic_years(name)")
       .eq("id", id)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? toTerm(data as unknown as DbTerm) : null;
+    if (!data) return null;
+    const term = toTerm(data as unknown as DbTerm);
+    term.academicYearName =
+      (data as unknown as { academic_years?: { name: string } | null })
+        .academic_years?.name ?? "";
+    return term;
   },
 
   async getCurrentTerm(): Promise<AcademicTerm | null> {
     const supabase = requireSupabase();
     const { data, error } = await supabase
       .from("terms")
-      .select("*")
+      .select("*, academic_years(name)")
       .eq("is_current", true)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? toTerm(data as unknown as DbTerm) : null;
+    if (!data) return null;
+    const term = toTerm(data as unknown as DbTerm);
+    term.academicYearName =
+      (data as unknown as { academic_years?: { name: string } | null })
+        .academic_years?.name ?? "";
+    return term;
   },
 
   async createTerm(values: AcademicTermFormValues): Promise<AcademicTerm> {

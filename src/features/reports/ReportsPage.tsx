@@ -142,7 +142,7 @@ export default function ReportsPage() {
             <option value="">Select term…</option>
             {terms.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name} — {t.academicYearId}
+                {t.name} — {t.academicYearName ?? ""}
               </option>
             ))}
           </Select>
