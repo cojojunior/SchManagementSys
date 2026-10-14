@@ -5,6 +5,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { studentAuthService } from "@/services/supabase/student-auth";
 
 export default function StudentLoginPage() {
@@ -72,13 +73,12 @@ export default function StudentLoginPage() {
             </FormField>
 
             <FormField label="4-digit code" required>
-              <Input
-                type="password"
+              <PasswordInput
                 inputMode="numeric"
                 maxLength={4}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                className="font-mono text-2xl tracking-widest text-center"
+                className="font-mono text-2xl tracking-widest text-center pr-10"
                 autoComplete="current-password"
               />
             </FormField>

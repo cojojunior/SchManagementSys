@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { KeyRound } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SuccessDialog } from "@/components/ui/SuccessDialog";
 import { supabase } from "@/lib/supabase";
 
@@ -153,16 +153,15 @@ useEffect(() => {
                 label="New password"
                 required
                 hint="At least 8 characters">
-                <Input
-                  type="password"
+                <PasswordInput
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   autoComplete="new-password"
                 />
               </FormField>
+
               <FormField label="Confirm password" required>
-                <Input
-                  type="password"
+                <PasswordInput
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   autoComplete="new-password"

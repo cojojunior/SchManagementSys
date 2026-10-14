@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { supabase } from "@/lib/supabase";
 import { ROLE_HOME, type Role } from "@/lib/constants";
-
+import { PasswordInput } from "@/components/ui/PasswordInput";
 export default function StaffLoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -80,8 +80,7 @@ export default function StaffLoginPage() {
             </FormField>
 
             <FormField label="Password" required>
-              <Input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"

@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { KeyRound } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { SuccessDialog } from "@/components/ui/SuccessDialog";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useAuth } from "@/features/auth/AuthContext";
 import { requireSupabase } from "@/lib/supabase";
 import { ROLE_HOME, type Role } from "@/lib/constants";
@@ -118,8 +118,7 @@ export default function ChangePasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!forced && (
               <FormField label="Current password" required>
-                <Input
-                  type="password"
+                <PasswordInput
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   autoComplete="current-password"
@@ -131,8 +130,7 @@ export default function ChangePasswordPage() {
               label="New password"
               required
               hint="At least 8 characters">
-              <Input
-                type="password"
+              <PasswordInput
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
@@ -140,8 +138,7 @@ export default function ChangePasswordPage() {
             </FormField>
 
             <FormField label="Confirm new password" required>
-              <Input
-                type="password"
+              <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
