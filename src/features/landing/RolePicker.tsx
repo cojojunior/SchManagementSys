@@ -87,7 +87,7 @@ export function RolePicker() {
         <h1 className="mt-4 text-xl sm:text-2xl font-semibold text-ink-900">
           Supreme Academy
         </h1>
-        <p className="text-sm text-ink-500 mt-1">Who are you signing in as?</p>
+        <p className="text-sm text-ink-500 mt-1">SIGN-IN AS?</p>
       </div>
 
       {/* Role cards */}
