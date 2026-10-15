@@ -22,7 +22,6 @@ const DIVISION_OPTIONS: { value: Division; label: string }[] = [
   { value: "jhs", label: "JHS" },
 ];
 
-const returnToList = useReturnToList();
 
 const schema = z.object({
   code: z.string().min(1, "Code is required").max(8, "Code is too long"),
@@ -41,6 +40,7 @@ export default function SubjectFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 

@@ -11,6 +11,9 @@ export default defineConfig({
     },
     dedupe: ["react", "react-dom", "react-router-dom"],
   },
+  build: {
+    sourcemap: true,
+  },
   server: {
     port: 5173,
     host: true,
