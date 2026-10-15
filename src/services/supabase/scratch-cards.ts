@@ -355,4 +355,20 @@ export const scratchCardsService = {
       reason: result.reason,
     };
   },
+  /**
+   * Check whether a student has already unlocked a term's results.
+   * Returns true if at least one successful redemption exists.
+   */
+  async isUnlockedForTerm(studentId: string, termId: string): Promise<boolean> {
+    const supabase = requireSupabase();
+    const { data, error } = await supabase
+      .from("scratch_card_usages")
+      .select("id")
+      .eq("student_id", studentId)
+      .eq("term_id", termId)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return Boolean(data);
+  },
 };
