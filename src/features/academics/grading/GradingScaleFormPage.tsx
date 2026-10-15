@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { gradingService } from "@/services/supabase/grading";
 import type { Division } from "@/types/common";
+import { useReturnToList } from "@/hooks/useReturnToList";
 
 const DIVISION_OPTIONS: { value: Division; label: string }[] = [
   { value: "nursery", label: "Nursery" },
@@ -20,6 +21,7 @@ const DIVISION_OPTIONS: { value: Division; label: string }[] = [
   { value: "primary", label: "Primary" },
   { value: "jhs", label: "JHS" },
 ];
+
 
 const bandSchema = z.object({
   grade: z.string().min(1, "Grade is required"),
@@ -47,6 +49,7 @@ export default function GradingScaleFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -96,7 +99,7 @@ export default function GradingScaleFormPage() {
       } else {
         await gradingService.create(values);
       }
-      navigate("..");
+      returnToList();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

@@ -17,6 +17,7 @@ import { academicYearsService } from "@/services/supabase/academic-years";
 import { CURRENCY_SYMBOL } from "@/lib/constants";
 import type { FeeItemCategory } from "@/types/finance";
 import type { Division } from "@/types/common";
+import { useReturnToList } from "@/hooks/useReturnToList";
 
 const CATEGORIES: { value: FeeItemCategory; label: string }[] = [
   { value: "tuition", label: "Tuition" },
@@ -27,6 +28,7 @@ const CATEGORIES: { value: FeeItemCategory; label: string }[] = [
   { value: "result_access", label: "Result Access" },
   { value: "other", label: "Other" },
 ];
+
 
 const itemSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -59,6 +61,7 @@ export default function FeeStructureFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -117,7 +120,7 @@ export default function FeeStructureFormPage() {
       } else {
         await feeStructuresService.create(payload);
       }
-      navigate("..");
+      returnToList();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

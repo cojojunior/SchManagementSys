@@ -12,6 +12,8 @@ import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import { usersService } from "@/services/supabase/users";
 import { ROLE_LABELS, type Role } from "@/lib/constants";
+import { useReturnToList } from "@/hooks/useReturnToList";
+
 
 const schema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -24,6 +26,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function UserFormPage() {
   const navigate = useNavigate();
+  const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -40,7 +43,7 @@ export default function UserFormPage() {
     setFormError(null);
     try {
       await usersService.provisionUser(values);
-      navigate("..");
+      returnToList();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

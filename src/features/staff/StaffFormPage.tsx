@@ -14,8 +14,10 @@ import { FormField } from "@/components/ui/FormField";
 import { SuccessDialog } from "@/components/ui/SuccessDialog";
 import { staffService } from "@/services/supabase/staff";
 import type { StaffFormValues } from "@/types/staff";
+import { useReturnToList } from "@/hooks/useReturnToList";
 
 const STAFF_ROLES = ["", "headmaster", "teacher", "secretary"] as const;
+const returnToList = useReturnToList();
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -105,7 +107,7 @@ export default function StaffFormPage() {
 
       if (isEdit && id) {
         await staffService.update(id, payload);
-        navigate("..");
+        returnToList();
       } else {
         const result = await staffService.create(payload);
         if (result.loginCreated) {
@@ -115,7 +117,7 @@ export default function StaffFormPage() {
             name: `${values.firstName} ${values.lastName}`,
           });
         } else {
-          navigate("..");
+          returnToList();
         }
       }
     } catch (e) {
@@ -368,7 +370,7 @@ export default function StaffFormPage() {
         open={created !== null}
         onClose={() => {
           setCreated(null);
-          navigate("..");
+          returnToList();
         }}
         title="Staff member created"
         message={

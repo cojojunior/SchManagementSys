@@ -20,11 +20,13 @@ import type { GradingScale } from "@/types/grading";
 import type { AssessmentWeight } from "@/types/assessment-weight";
 import type { MarkEntryRow } from "@/types/score";
 import { cn } from "@/lib/cn";
+import { useReturnToList } from "@/hooks/useReturnToList";
+
 
 export default function MarkEntryPage() {
   const { id: assessmentId = "" } = useParams();
   const navigate = useNavigate();
-
+  const returnToList = useReturnToList();
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [scale, setScale] = useState<GradingScale | null>(null);
   const [weight, setWeight] = useState<AssessmentWeight | null>(null);
@@ -138,6 +140,7 @@ export default function MarkEntryPage() {
     },
     [],
   );
+  
 
   function updateRow(studentId: string, patch: Partial<MarkEntryRow>) {
     if (!assessment || !weight || !scale) return;
@@ -169,7 +172,7 @@ export default function MarkEntryPage() {
       await scoresService.saveScores({ assessmentId: assessment.id, rows });
       await scoresService.updateStatus(assessment.id, "submitted");
       setConfirmSubmit(false);
-      navigate("..");
+      returnToList();
     } finally {
       setSubmitting(false);
     }

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
+import { useReturnToList } from "@/hooks/useReturnToList";
 import { FormField } from "@/components/ui/FormField";
 import { subjectsService } from "@/services/supabase/subjects";
 import type { Division } from "@/types/common";
@@ -20,6 +21,8 @@ const DIVISION_OPTIONS: { value: Division; label: string }[] = [
   { value: "primary", label: "Primary" },
   { value: "jhs", label: "JHS" },
 ];
+
+const returnToList = useReturnToList();
 
 const schema = z.object({
   code: z.string().min(1, "Code is required").max(8, "Code is too long"),
@@ -74,7 +77,7 @@ export default function SubjectFormPage() {
       } else {
         await subjectsService.create(values);
       }
-      navigate("..");
+      returnToList();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

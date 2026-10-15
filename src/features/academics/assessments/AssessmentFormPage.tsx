@@ -18,6 +18,7 @@ import { subjectsService } from "@/services/supabase/subjects";
 import { academicYearsService } from "@/services/supabase/academic-years";
 import { staffService } from "@/services/supabase/staff";
 import type { AssessmentFormValues } from "@/types/assessment";
+import { useReturnToList } from "@/hooks/useReturnToList";
 
 const schema = z.object({
   classId: z.string().min(1, "Class is required"),
@@ -56,6 +57,8 @@ export default function AssessmentFormPage() {
     const res = await staffService.list({ category: "teaching" }, 1, 200);
     return res.data;
   });
+
+  const returnToList = useReturnToList();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -100,7 +103,7 @@ export default function AssessmentFormPage() {
       } else {
         await assessmentsService.create(payload);
       }
-      navigate("..");
+      returnToList();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

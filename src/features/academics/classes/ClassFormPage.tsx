@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import { classesService } from "@/services/supabase/classes";
+import { useReturnToList } from "@/hooks/useReturnToList";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -29,6 +30,7 @@ export default function ClassFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -69,7 +71,7 @@ export default function ClassFormPage() {
       } else {
         await classesService.create(values);
       }
-      navigate("..");
+      returnToList();
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
