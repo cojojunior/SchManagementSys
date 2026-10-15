@@ -4,7 +4,7 @@ export default function TermsPage() {
   return (
     <LegalLayout
       title="Terms & Conditions"
-      lastUpdated="[EFFECTIVE_DATE]"
+      lastUpdated="1st November, 2026"
       contactEmail="privacy@supremeacademy.edu.gh">
       <h2>1. Agreement to these terms</h2>
       <p>

@@ -18,10 +18,10 @@ export function LegalLayout({
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-ink-200">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link
-            to="/login"
+            to="/"
             className="text-sm text-ink-600 hover:text-ink-900 inline-flex items-center gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to sign in
+            Back
           </Link>
           <div className="text-xs text-ink-500">
             Last updated: {lastUpdated}
