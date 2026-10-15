@@ -24,16 +24,28 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function safeLocalPart(email: string | undefined): string | null {
+  if (!email) return null;
+  const local = email.split("@")[0];
+  if (!local) return null;
+  if (UUID_RE.test(local)) return null;
+  return local;
+}
+
 function sessionToUser(session: Session | null): AuthUser | null {
   if (!session?.user) return null;
   const user = session.user;
   const meta = user.app_metadata ?? {};
   const role = (meta.role as Role) ?? "student";
+  const fromMeta = user.user_metadata?.full_name as string | undefined;
+  const fromEmail = safeLocalPart(user.email);
   return {
     id: user.id,
     email: user.email ?? "",
-    fullName:
-      user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "User",
+    fullName: fromMeta ?? fromEmail ?? "",
     role,
     studentId: meta.student_id as string | undefined,
     mustChangePassword: false,
