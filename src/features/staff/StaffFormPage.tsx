@@ -17,7 +17,7 @@ import type { StaffFormValues } from "@/types/staff";
 import { useReturnToList } from "@/hooks/useReturnToList";
 
 const STAFF_ROLES = ["", "headmaster", "teacher", "secretary"] as const;
-const returnToList = useReturnToList();
+
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -47,6 +47,7 @@ export default function StaffFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 

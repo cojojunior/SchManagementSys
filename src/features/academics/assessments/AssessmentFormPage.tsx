@@ -39,6 +39,7 @@ export default function AssessmentFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+   const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -58,7 +59,7 @@ export default function AssessmentFormPage() {
     return res.data;
   });
 
-  const returnToList = useReturnToList();
+ 
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
