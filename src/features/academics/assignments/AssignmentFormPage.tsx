@@ -18,6 +18,7 @@ import { classesService } from "@/services/supabase/classes";
 import { subjectsService } from "@/services/supabase/subjects";
 import type { TeachingAssignmentFormValues } from "@/types/teaching-assignment";
 
+
 const schema = z.object({
   staffId: z.string().min(1, "Teacher is required"),
   classId: z.string().min(1, "Class is required"),
@@ -90,7 +91,7 @@ export default function AssignmentFormPage() {
       } else {
         await teachingAssignmentsService.create(payload);
       }
-      navigate("..");
+      navigate("/admin/assignments");
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -121,7 +122,7 @@ export default function AssignmentFormPage() {
                 <option value="">Select a teacher…</option>
                 {staff.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.firstName} {s.lastName} — {s.jobTitle}
+                    {s.firstName} {s.lastName}
                   </option>
                 ))}
               </Select>
