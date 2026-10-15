@@ -1,5 +1,16 @@
 import type { UUID } from "./common";
 
+export type ProficiencyRating =
+  "Needs Improvement" | "Satisfactory" | "Good" | "Very Good" | "Excellent";
+
+export type ProficiencyArea =
+  "Conduct" | "Work" | "Participation" | "Academic" | "Overall Performance";
+
+export type ReportCardProficiencyRow = {
+  area: ProficiencyArea;
+  rating: ProficiencyRating | null;
+};
+
 export type ReportCardSubjectRow = {
   subjectId: UUID;
   subjectCode: string;
@@ -13,6 +24,11 @@ export type ReportCardSubjectRow = {
   gradeLabel: string;
   remark?: string; // teacher's subject remark
   position?: number; // position in the class for this subject
+
+  // Mockup columns — populated per-term when available, otherwise 0
+  term1Score?: number | null;
+  term2Score?: number | null;
+  term3Score?: number | null;
 };
 
 export type ReportCardData = {
@@ -53,4 +69,8 @@ export type ReportCardData = {
     phone?: string;
     email?: string;
   };
+
+  // Mockup-specific, optional so nothing existing breaks
+  classTeacherName?: string;
+  proficiency?: ReportCardProficiencyRow[];
 };
