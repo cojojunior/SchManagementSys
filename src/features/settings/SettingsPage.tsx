@@ -9,7 +9,6 @@ import {
   Percent,
   Receipt,
   School,
-  BookOpen,
   ClipboardList,
   FileText,
   Banknote,
@@ -77,13 +76,7 @@ const GROUPS: LinkGroup[] = [
         icon: School,
         tone: "emerald",
       },
-      {
-        to: "/admin/subjects",
-        label: "Subjects",
-        description: "Core and elective subjects",
-        icon: BookOpen,
-        tone: "violet",
-      },
+      
       {
         to: "/admin/assignments",
         label: "Teaching Assignments",
