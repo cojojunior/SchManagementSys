@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { RequireRole } from "@/features/auth/RequireRole";
 import { AppShell } from "@/layouts/AppShell";
@@ -72,7 +72,15 @@ export default function App() {
     <AuthProvider>
       <Routes>
         {/* ============ Public routes ============ */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<StaffLoginPage />} />
+
+        {/* Super Admin secret entry point */}
+        <Route
+          path="/admin"
+          element={<Navigate to="/login?role=super_admin" replace />}
+        />
+
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />
@@ -80,7 +88,6 @@ export default function App() {
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/" element={<LandingPage />} />
 
         {/* ============ Authenticated shell ============ */}
         <Route
@@ -98,7 +105,7 @@ export default function App() {
           }>
           {/* Dashboards */}
           <Route
-            path="/admin"
+            path="/admin/dashboard"
             element={
               <RequireRole roles={["super_admin"]}>
                 <AdminDashboard />

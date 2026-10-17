@@ -1,11 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
-  ShieldCheck,
-  Crown,
-  GraduationCap,
-  FileText,
-  BookOpen,
-} from "lucide-react";
+import { Crown, GraduationCap, FileText, BookOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -19,14 +13,6 @@ type RoleCard = {
 };
 
 const ROLES: RoleCard[] = [
-  {
-    key: "super_admin",
-    label: "Super Admin",
-    description: "Full system access",
-    icon: ShieldCheck,
-    to: "/login",
-    tone: "red",
-  },
   {
     key: "headmaster",
     label: "Headmaster",
@@ -79,7 +65,7 @@ export function RolePicker() {
         <img
           src="/SUAC-LOGO.svg"
           alt=""
-          className="h-16 w-16 sm:h-20 sm:w-20 mx-auto object-contain select-none"
+          className="h-28 w-28 sm:h-30 sm:w-30 mx-auto object-contain select-none"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = "none";
           }}
@@ -91,7 +77,7 @@ export function RolePicker() {
       </div>
 
       {/* Role cards */}
-      <div className="mt-8 w-full max-w-2xl grid gap-3 sm:grid-cols-2">
+      <div className="mt-8 w-full max-w-2xl grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {ROLES.map((role, index) => {
           const Icon = role.icon;
           const tone = TONE_MAP[role.tone];

@@ -30,7 +30,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         <img
           src="/SUAC-LOGO.svg"
           alt="Supreme Academy"
-          className="h-32 w-32 sm:h-40 sm:w-40 object-contain select-none"
+          className="h-55 w-55 sm:h-60 sm:w-60 object-contain select-none"
           onError={(e) => {
             const img = e.currentTarget as HTMLImageElement;
             img.style.display = "none";

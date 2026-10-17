@@ -22,7 +22,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 };
 
 export const ROLE_HOME: Record<Role, string> = {
-  super_admin: "/admin",
+  super_admin: "/admin/dashboard",
   headmaster: "/headmaster",
   teacher: "/teacher",
   secretary: "/secretary",

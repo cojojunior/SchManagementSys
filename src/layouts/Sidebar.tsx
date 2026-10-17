@@ -23,7 +23,7 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
 const NAV: Record<Role, NavItem[]> = {
   super_admin: [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/admin/students", label: "Students", icon: GraduationCap },
     { to: "/admin/staff", label: "Staff", icon: Users },
     { to: "/admin/users", label: "Users & Roles", icon: UserCog },
