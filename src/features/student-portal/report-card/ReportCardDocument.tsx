@@ -26,14 +26,14 @@ const s = StyleSheet.create({
   headerRow: { flexDirection: "row", height: 60 },
   logoCell: {
     width: "22%",
-    backgroundColor: "#0f6b6b",
+    backgroundColor: "#FFF",
     justifyContent: "center",
     alignItems: "center",
   },
   logo: { width: 40, height: 40 },
   nameCell: {
     width: "53%",
-    backgroundColor: "#0b2b45",
+    backgroundColor: "#002D62",
     color: "white",
     padding: 8,
     justifyContent: "center",
@@ -63,7 +63,7 @@ const s = StyleSheet.create({
   },
   infoLabel: {
     width: "50%",
-    backgroundColor: "#0b2b45",
+    backgroundColor: "#002D62",
     color: "white",
     padding: 4,
     fontFamily: "Helvetica-Bold",
@@ -72,7 +72,7 @@ const s = StyleSheet.create({
   infoValue: { width: "50%", padding: 4, fontSize: 8 },
 
   sectionBar: {
-    backgroundColor: "#0b2b45",
+    backgroundColor: "#002D62",
     color: "white",
     padding: 5,
     marginTop: 10,
