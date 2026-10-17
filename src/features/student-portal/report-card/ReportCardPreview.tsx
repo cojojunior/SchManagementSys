@@ -40,7 +40,7 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
             {data.school.name}
           </div>
           <div className="text-[11px] tracking-widest opacity-80 mt-1">
-            MOTTO: LEARNING TODAY, LEADING TOMORROW
+            MOTTO: DISCOVER TO RECOVER
           </div>
         </div>
         <div className="flex w-1/4 flex-col items-center justify-center bg-[#f5c518] px-4 py-4 text-[#0b2b45]">

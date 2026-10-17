@@ -172,7 +172,7 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
           </View>
           <View style={s.nameCell}>
             <Text style={s.schoolName}>{data.school.name}</Text>
-            <Text style={s.motto}>MOTTO: LEARNING TODAY, LEADING TOMORROW</Text>
+            <Text style={s.motto}>MOTTO: DISCOVER TO RECOVER</Text>
           </View>
           <View style={s.titleCell}>
             <Text style={s.titleTop}>STUDENT</Text>
