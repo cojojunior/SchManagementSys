@@ -54,16 +54,17 @@ const s = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     marginTop: 10,
-    border: "1 solid #cbd5e1",
+    border: "1 solid #0f6b6b",
   },
   infoCell: {
     width: "50%",
     flexDirection: "row",
-    borderBottom: "1 solid #cbd5e1",
+    borderBottom: "1 solid #cfe3e3",
   },
   infoLabel: {
     width: "50%",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#0b2b45",
+    color: "white",
     padding: 4,
     fontFamily: "Helvetica-Bold",
     fontSize: 8,
@@ -87,15 +88,15 @@ const s = StyleSheet.create({
   th: {
     flex: 1,
     padding: 4,
-    border: "1 solid #cbd5e1",
+    border: "1 solid #0f6b6b",
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
     fontSize: 7,
   },
   thLeft: {
-    flex: 2,
+    flex: 3,
     padding: 4,
-    border: "1 solid #cbd5e1",
+    border: "1 solid #0f6b6b",
     fontFamily: "Helvetica-Bold",
     fontSize: 7,
   },
@@ -103,11 +104,11 @@ const s = StyleSheet.create({
   td: {
     flex: 1,
     padding: 4,
-    border: "1 solid #cbd5e1",
+    border: "1 solid #cfe3e3",
     textAlign: "center",
     fontSize: 8,
   },
-  tdLeft: { flex: 2, padding: 4, border: "1 solid #cbd5e1", fontSize: 8 },
+  tdLeft: { flex: 3, padding: 4, border: "1 solid #cfe3e3", fontSize: 8 },
 
   overallRow: {
     flexDirection: "row",
@@ -121,26 +122,24 @@ const s = StyleSheet.create({
   },
 
   comment: {
-    border: "1 solid #cbd5e1",
+    border: "1 solid #0f6b6b",
     minHeight: 60,
     padding: 6,
     color: "#475569",
     fontSize: 8,
   },
 
-  sigRow: {
+  footer: {
     flexDirection: "row",
-    marginTop: 30,
     justifyContent: "space-between",
-  },
-  sigCell: {
-    width: "22%",
-    borderTop: "1 solid #64748b",
-    paddingTop: 4,
-    textAlign: "center",
+    borderTop: "1 solid #0f6b6b",
+    marginTop: 16,
+    paddingTop: 6,
     fontSize: 7,
+    color: "#64748b",
   },
-  sigSub: { color: "#94a3b8", fontSize: 6 },
+  footerBold: { fontFamily: "Helvetica-Bold", color: "#0b2b45" },
+  mono: { fontFamily: "Courier" },
 });
 
 export function ReportCardDocument({ data }: { data: ReportCardData }) {
@@ -156,6 +155,13 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
       ? `${data.totals.position} / ${data.totals.classSize}`
       : "—";
 
+  const refId = `RC-${data.student.admissionNumber}-${data.term.name.replace(/\s+/g, "")}`;
+  const generatedOn = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
     <Document>
       <Page size="A4" style={s.page}>
@@ -166,7 +172,7 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
           </View>
           <View style={s.nameCell}>
             <Text style={s.schoolName}>{data.school.name}</Text>
-            <Text style={s.motto}>MOTTO: DISCOVER TO RECOVER</Text>
+            <Text style={s.motto}>MOTTO: LEARNING TODAY, LEADING TOMORROW</Text>
           </View>
           <View style={s.titleCell}>
             <Text style={s.titleTop}>STUDENT</Text>
@@ -193,22 +199,16 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
         <Text style={s.sectionBar}>ACADEMIC PERFORMANCE</Text>
         <View style={s.tableHead}>
           <Text style={s.thLeft}>SUBJECT</Text>
-          <Text style={s.th}>TERM 1</Text>
-          <Text style={s.th}>TERM 2</Text>
-          <Text style={s.th}>TERM 3</Text>
-          <Text style={s.th}>FINAL GRADE</Text>
-          <Text style={s.th}>REMARKS / POSITION</Text>
+          <Text style={s.th}>SCORE</Text>
+          <Text style={s.th}>GRADE</Text>
+          <Text style={s.th}>REMARKS</Text>
         </View>
         {data.subjects.map((row) => (
           <View style={s.tr} key={row.subjectId}>
             <Text style={s.tdLeft}>{row.subjectName}</Text>
-            <Text style={s.td}>{fmt(row.term1Score)}</Text>
-            <Text style={s.td}>{fmt(row.term2Score)}</Text>
-            <Text style={s.td}>{fmt(row.term3Score)}</Text>
             <Text style={s.td}>{fmt(row.finalScore)}</Text>
-            <Text style={s.td}>
-              {row.remark || (row.position ? `Pos ${row.position}` : "Enter")}
-            </Text>
+            <Text style={s.td}>{row.grade}</Text>
+            <Text style={s.td}>{row.remark || "—"}</Text>
           </View>
         ))}
         {data.subjects.length === 0 && (
@@ -218,7 +218,7 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
                 s.tdLeft,
                 { flex: 6, textAlign: "center", color: "#94a3b8" },
               ]}>
-              No subjects entered yet for this term.
+              No subjects configured for this division.
             </Text>
           </View>
         )}
@@ -230,7 +230,7 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
                 flex: 4,
                 textAlign: "right",
                 fontFamily: "Helvetica-Bold",
-                borderTop: "1 solid #cbd5e1",
+                borderTop: "1 solid #0b2b45",
               },
             ]}>
             OVERALL AVERAGE
@@ -285,19 +285,19 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
           </View>
         )}
 
-        {/* Signatures */}
-        <View style={s.sigRow}>
-          {[
-            "Class Teacher's Signature",
-            "Head of Department (H.O.D)",
-            "School Head",
-            "Parent / Guardian",
-          ].map((l) => (
-            <View key={l} style={s.sigCell}>
-              <Text>{l}</Text>
-              <Text style={s.sigSub}>Name and Signature</Text>
-            </View>
-          ))}
+        {/* Verification footer */}
+        <View style={s.footer}>
+          <View>
+            <Text style={s.footerBold}>System-generated report card</Text>
+            <Text>
+              Verify at supremeacademy.netlify.app/verify · Ref{" "}
+              <Text style={s.mono}>{refId}</Text>
+            </Text>
+          </View>
+          <View>
+            <Text>Generated on {generatedOn}</Text>
+            <Text>Supreme Academy, Accra</Text>
+          </View>
         </View>
       </Page>
     </Document>
@@ -307,7 +307,7 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
 function InfoCell({ label, value }: { label: string; value: string }) {
   return (
     <View style={s.infoCell}>
-      <Text style={s.infoLabel}>{label} :</Text>
+      <Text style={s.infoLabel}>{label}</Text>
       <Text style={s.infoValue}>{value}</Text>
     </View>
   );

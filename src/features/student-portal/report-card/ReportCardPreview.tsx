@@ -21,6 +21,13 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
       ? `${data.totals.position} / ${data.totals.classSize}`
       : "—";
 
+  const refId = `RC-${data.student.admissionNumber}-${data.term.name.replace(/\s+/g, "")}`;
+  const generatedOn = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
     <div className="mx-auto max-w-[900px] bg-white p-6 text-ink-900 rounded-lg border border-ink-200">
       {/* Header */}
@@ -42,8 +49,8 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
         </div>
       </div>
 
-      {/* Info grid */}
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 border border-ink-200 text-sm">
+      {/* Info grid — colors pulled from the logo palette */}
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 border border-[#0f6b6b] text-sm overflow-hidden rounded-sm">
         <InfoRow label="Student Name" value={data.student.fullName} />
         <InfoRow label="Term" value={data.term.name} />
         <InfoRow label="Student ID" value={data.student.admissionNumber} />
@@ -60,71 +67,60 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#0f6b6b] text-white">
-              <th className="border border-ink-200 px-3 py-2 text-left">
+              <th className="border border-[#0f6b6b] px-3 py-2 text-left">
                 SUBJECT
               </th>
-              <th className="border border-ink-200 px-3 py-2">TERM 1</th>
-              <th className="border border-ink-200 px-3 py-2">TERM 2</th>
-              <th className="border border-ink-200 px-3 py-2">TERM 3</th>
-              <th className="border border-ink-200 px-3 py-2">FINAL GRADE</th>
-              <th className="border border-ink-200 px-3 py-2">
-                REMARKS / POSITION
+              <th className="border border-[#0f6b6b] px-3 py-2 text-center w-24">
+                SCORE
               </th>
+              <th className="border border-[#0f6b6b] px-3 py-2 text-center w-24">
+                GRADE
+              </th>
+              <th className="border border-[#0f6b6b] px-3 py-2">REMARKS</th>
             </tr>
           </thead>
           <tbody>
             {data.subjects.map((s, i) => (
               <tr
                 key={s.subjectId}
-                className={i % 2 ? "bg-ink-50" : "bg-white"}>
-                <td className="border border-ink-200 px-3 py-2 font-medium">
+                className={i % 2 ? "bg-[#f7fafb]" : "bg-white"}>
+                <td className="border border-[#cfe3e3] px-3 py-2 font-medium">
                   {s.subjectName}
                 </td>
-                <td className="border border-ink-200 px-3 py-2 text-center tabular-nums">
-                  {fmt(s.term1Score)}
-                </td>
-                <td className="border border-ink-200 px-3 py-2 text-center tabular-nums">
-                  {fmt(s.term2Score)}
-                </td>
-                <td className="border border-ink-200 px-3 py-2 text-center tabular-nums">
-                  {fmt(s.term3Score)}
-                </td>
-                <td className="border border-ink-200 px-3 py-2 text-center tabular-nums font-semibold">
+                <td className="border border-[#cfe3e3] px-3 py-2 text-center tabular-nums font-semibold">
                   {fmt(s.finalScore)}
                 </td>
-                <td className="border border-ink-200 px-3 py-2 text-center text-ink-500">
-                  {s.remark
-                    ? s.remark
-                    : s.position
-                      ? `Position ${s.position}`
-                      : "Enter"}
+                <td className="border border-[#cfe3e3] px-3 py-2 text-center">
+                  {s.grade}
+                </td>
+                <td className="border border-[#cfe3e3] px-3 py-2 text-center text-ink-500">
+                  {s.remark || "—"}
                 </td>
               </tr>
             ))}
             {data.subjects.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
-                  className="border border-ink-200 px-3 py-6 text-center text-ink-400">
-                  No subjects entered yet for this term.
+                  colSpan={4}
+                  className="border border-[#cfe3e3] px-3 py-6 text-center text-ink-400">
+                  No subjects configured for this division.
                 </td>
               </tr>
             )}
             <tr className="bg-[#0b2b45] text-white">
               <td
-                colSpan={3}
-                className="border border-ink-200 px-3 py-2 text-right font-semibold">
+                colSpan={2}
+                className="border border-[#0b2b45] px-3 py-2 text-right font-semibold">
                 OVERALL AVERAGE
               </td>
-              <td className="border border-ink-200 bg-[#f5c518] px-3 py-2 text-center font-bold text-[#0b2b45] tabular-nums">
+              <td className="border border-[#0b2b45] bg-[#f5c518] px-3 py-2 text-center font-bold text-[#0b2b45] tabular-nums">
                 {fmt(data.totals.averageScore)}
               </td>
-              <td className="border border-ink-200 px-3 py-2 text-right text-sm">
+              <td className="border border-[#0b2b45] px-3 py-2 text-right text-sm">
                 {data.totals.position > 0
                   ? `Position ${data.totals.position} / ${data.totals.classSize}`
                   : "Overall position"}
               </td>
-              <td className="border border-ink-200" />
             </tr>
           </tbody>
         </table>
@@ -132,7 +128,7 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
 
       {/* Teacher comment */}
       <SectionBar>TEACHER COMMENT</SectionBar>
-      <div className="min-h-[100px] border border-ink-200 px-4 py-3 text-sm text-ink-600">
+      <div className="min-h-[100px] border border-[#0f6b6b] px-4 py-3 text-sm text-ink-600">
         {data.teacherRemark ||
           "Enter teacher's comment about the student's progress, behavior and attitude."}
       </div>
@@ -143,11 +139,11 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#0f6b6b] text-white">
-              <th className="border border-ink-200 px-3 py-2 text-left">
+              <th className="border border-[#0f6b6b] px-3 py-2 text-left">
                 AREA
               </th>
               {RATING_COLS.map((c) => (
-                <th key={c} className="border border-ink-200 px-3 py-2">
+                <th key={c} className="border border-[#0f6b6b] px-3 py-2">
                   {c}
                 </th>
               ))}
@@ -156,14 +152,14 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
           <tbody>
             {(data.proficiency ?? []).map((p) => (
               <tr key={p.area}>
-                <td className="border border-ink-200 px-3 py-2 font-medium">
+                <td className="border border-[#cfe3e3] px-3 py-2 font-medium">
                   {p.area}
                 </td>
                 {RATING_COLS.map((c) => (
                   <td
                     key={c}
-                    className="border border-ink-200 px-3 py-2 text-center">
-                    <span className="inline-flex h-4 w-4 items-center justify-center border border-ink-400 align-middle text-[10px]">
+                    className="border border-[#cfe3e3] px-3 py-2 text-center">
+                    <span className="inline-flex h-4 w-4 items-center justify-center border border-[#0f6b6b] align-middle text-[10px] text-[#0f6b6b]">
                       {p.rating === c ? "✓" : ""}
                     </span>
                   </td>
@@ -174,7 +170,7 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
               <tr>
                 <td
                   colSpan={6}
-                  className="border border-ink-200 px-3 py-6 text-center text-ink-400">
+                  className="border border-[#cfe3e3] px-3 py-6 text-center text-ink-400">
                   No proficiency ratings entered yet.
                 </td>
               </tr>
@@ -183,21 +179,21 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
         </table>
       </div>
 
-      {/* Signatures */}
-      <div className="mt-10 grid grid-cols-2 gap-8 sm:grid-cols-4 text-center text-xs">
-        {[
-          "Class Teacher's Signature",
-          "Head of Department (H.O.D)",
-          "School Head",
-          "Parent / Guardian",
-        ].map((label) => (
-          <div key={label}>
-            <div className="border-t border-ink-400 pt-2 font-semibold">
-              {label}
-            </div>
-            <div className="text-ink-400">Name and Signature</div>
+      {/* Verification footer (replaces signatures) */}
+      <div className="mt-6 border-t border-[#0f6b6b] pt-3 text-[11px] text-ink-500 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
+        <div>
+          <div className="font-semibold text-[#0b2b45]">
+            System-generated report card
           </div>
-        ))}
+          <div>
+            Verify at supremeacademy.netlify.app/verify · Ref{" "}
+            <span className="font-mono">{refId}</span>
+          </div>
+        </div>
+        <div className="text-right">
+          <div>Generated on {generatedOn}</div>
+          <div>Supreme Academy, Accra</div>
+        </div>
       </div>
     </div>
   );
@@ -205,8 +201,10 @@ export function ReportCardPreview({ data }: { data: ReportCardData }) {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex border border-ink-200">
-      <div className="w-1/2 bg-ink-50 px-3 py-2 font-semibold">{label} :</div>
+    <div className="flex border border-[#cfe3e3]">
+      <div className="w-1/2 bg-[#0b2b45] text-white px-3 py-2 font-semibold">
+        {label}
+      </div>
       <div className="w-1/2 px-3 py-2">{value}</div>
     </div>
   );
