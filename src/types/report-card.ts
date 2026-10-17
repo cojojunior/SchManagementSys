@@ -55,7 +55,9 @@ export type ReportCardData = {
     totalSubjects: number;
     position: number;
     classSize: number;
+    classAverage?: number;
   };
+  
   attendance?: {
     present: number;
     total: number;

@@ -8,343 +8,318 @@ import {
 } from "@react-pdf/renderer";
 import type { ReportCardData } from "@/types/report-card";
 
-const RATING_COLS = [
-  "Needs Improvement",
-  "Satisfactory",
-  "Good",
-  "Very Good",
-  "Excellent",
-] as const;
-
 const s = StyleSheet.create({
-  page: {
-    padding: 24,
-    fontSize: 9,
-    fontFamily: "Helvetica",
-    color: "#002D62",
+  page: { padding: 30, fontSize: 10, fontFamily: "Times-Roman", color: "#000" },
+  header: { textAlign: "center", marginBottom: 15 },
+  logo: { width: 60, height: 60, alignSelf: "center", marginBottom: 5 },
+  schoolName: {
+    fontSize: 22,
+    fontFamily: "Times-Bold",
+    letterSpacing: 2,
+    marginBottom: 4,
   },
-  headerRow: { flexDirection: "row", height: 60, border: "1 solid #002D62" },
-  logoCell: {
-    width: "22%",
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
+  schoolInfo: { fontSize: 8, lineHeight: 1.2 },
+  reportTitle: {
+    fontSize: 14,
+    fontFamily: "Times-Bold",
+    textDecoration: "underline",
+    marginTop: 10,
+    letterSpacing: 1,
   },
-  logo: { width: 40, height: 40 },
-  nameCell: {
-    width: "53%",
-    backgroundColor: "#002D62",
-    color: "white",
-    padding: 8,
-    justifyContent: "center",
-    borderLeft: "1 solid #002D62",
-  },
-  schoolName: { fontSize: 16, fontFamily: "Helvetica-Bold" },
-  motto: { fontSize: 6, opacity: 0.8, marginTop: 3, letterSpacing: 1 },
-  titleCell: {
-    width: "25%",
-    backgroundColor: "#f5c518",
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    borderLeft: "1 solid #002D62",
-  },
-  titleTop: { fontSize: 8, fontFamily: "Helvetica-Bold", letterSpacing: 1 },
-  titleMain: { fontSize: 14, fontFamily: "Helvetica-Bold" },
 
   infoGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 10,
-    borderTop: "1 solid #002D62",
-    borderLeft: "1 solid #002D62",
+    justifyContent: "space-between",
+    marginBottom: 15,
   },
-  infoCell: {
-    width: "50%",
-    flexDirection: "row",
-    borderBottom: "1 solid #002D62",
-    borderRight: "1 solid #002D62",
-  },
-  infoLabel: {
-    width: "50%",
-    backgroundColor: "#002D62",
-    color: "white",
-    padding: 4,
-    fontFamily: "Helvetica-Bold",
-    fontSize: 8,
-  },
-  infoValue: {
-    width: "50%",
-    padding: 4,
-    fontSize: 8,
-    borderLeft: "1 solid #002D62",
-  },
+  infoCol: { width: "48%" },
+  infoRow: { flexDirection: "row", marginBottom: 6, alignItems: "flex-end" },
+  infoLabel: { width: 90, fontFamily: "Times-Bold" },
+  infoValue: { flex: 1, borderBottom: "1 dotted #000", paddingBottom: 2 },
 
-  sectionBar: {
-    backgroundColor: "#002D62",
-    color: "white",
-    padding: 5,
-    marginTop: 10,
-    fontFamily: "Helvetica-Bold",
-    fontSize: 9,
-    borderTop: "1 solid #002D62",
-    borderLeft: "1 solid #002D62",
-    borderRight: "1 solid #002D62",
-  },
+  termTitle: { fontFamily: "Times-Bold", marginBottom: 6 },
 
-  tableHead: {
-    flexDirection: "row",
-    backgroundColor: "#002D62",
-    color: "white",
-    borderLeft: "1 solid #002D62",
-    borderTop: "1 solid #002D62",
-  },
-  th: {
-    flex: 1,
-    padding: 4,
-    borderRight: "1 solid #002D62",
-    borderBottom: "1 solid #002D62",
-    fontFamily: "Helvetica-Bold",
-    textAlign: "center",
-    fontSize: 7,
-  },
-  thLeft: {
-    flex: 3,
-    padding: 4,
-    borderRight: "1 solid #002D62",
-    borderBottom: "1 solid #002D62",
-    fontFamily: "Helvetica-Bold",
-    fontSize: 7,
+  table: {
+    width: "100%",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderColor: "#000",
   },
   tr: { flexDirection: "row" },
-  td: {
-    flex: 1,
+  th: {
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#000",
     padding: 4,
-    borderRight: "1 solid #002D62",
-    borderBottom: "1 solid #002D62",
+    fontFamily: "Times-Bold",
     textAlign: "center",
-    fontSize: 8,
+    backgroundColor: "#f3f4f6",
+  },
+  thLeft: {
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    padding: 4,
+    fontFamily: "Times-Bold",
+    flex: 3,
+  },
+  td: {
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    padding: 4,
+    textAlign: "center",
   },
   tdLeft: {
-    flex: 3,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#000",
     padding: 4,
-    borderRight: "1 solid #002D62",
-    borderBottom: "1 solid #002D62",
+    flex: 3,
+    textTransform: "uppercase",
+  },
+  tdLast: {
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    padding: 4,
+    textAlign: "center",
+    textTransform: "uppercase",
     fontSize: 8,
   },
 
-  overallRow: {
-    flexDirection: "row",
-    backgroundColor: "#002D62",
-    color: "white",
-    borderLeft: "1 solid #002D62",
-  },
-  yellow: {
-    backgroundColor: "#f5c518",
-    color: "#002D62",
-    fontFamily: "Helvetica-Bold",
-  },
-
-  comment: {
-    borderLeft: "1 solid #002D62",
-    borderRight: "1 solid #002D62",
-    borderBottom: "1 solid #002D62",
-    minHeight: 60,
-    padding: 6,
-    color: "#475569",
-    fontSize: 8,
-  },
-
-  footer: {
+  footerGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    borderTop: "1 solid #002D62",
-    marginTop: 16,
-    paddingTop: 6,
-    fontSize: 7,
-    color: "#64748b",
+    marginTop: 20,
   },
-  footerBold: { fontFamily: "Helvetica-Bold", color: "#002D62" },
-  mono: { fontFamily: "Courier" },
+  billBox: { width: "48%", borderWidth: 1, borderColor: "#000" },
+  billHead: {
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    padding: 4,
+    textAlign: "center",
+    fontFamily: "Times-Bold",
+    backgroundColor: "#f3f4f6",
+  },
+  billRow: { flexDirection: "row", borderBottomWidth: 1, borderColor: "#000" },
+  billRowLast: { flexDirection: "row" },
+  billTdLeft: { flex: 3, borderRightWidth: 1, borderColor: "#000", padding: 4 },
+  billTdRight: { flex: 1, padding: 4, textAlign: "right" },
+
+  rightFooter: { width: "48%" },
+  signRow: { flexDirection: "row", marginBottom: 12, alignItems: "flex-end" },
+  signLabel: { width: 90, fontFamily: "Times-Bold" },
+  signLine: {
+    flex: 1,
+    borderBottom: "1 dotted #000",
+    minHeight: 15,
+    fontStyle: "italic",
+  },
+
+  bottomFooter: { marginTop: 20, flexDirection: "row", alignItems: "flex-end" },
 });
 
 export function ReportCardDocument({ data }: { data: ReportCardData }) {
   const fmt = (n: number | null | undefined) =>
-    n == null || n === 0 ? "0.0" : n.toFixed(1);
+    n == null || n === 0 ? "0" : n.toFixed(0);
 
-  const attendanceLabel = data.attendance
-    ? `${data.attendance.present} / ${data.attendance.total}`
-    : "—";
-
-  const positionLabel =
-    data.totals.position > 0
-      ? `${data.totals.position} / ${data.totals.classSize}`
-      : "—";
-
-  const refId = `RC-${data.student.admissionNumber}-${data.term.name.replace(/\s+/g, "")}`;
-  const generatedOn = new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const calculateAge = (dob: string) => {
+    if (!dob) return "—";
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age.toString();
+  };
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
         {/* Header */}
-        <View style={s.headerRow}>
-          <View style={s.logoCell}>
-            <Image style={s.logo} src="/SUAC-LOGO.svg" />
-          </View>
-          <View style={s.nameCell}>
-            <Text style={s.schoolName}>{data.school.name}</Text>
-            <Text style={s.motto}>MOTTO: LEARNING TODAY, LEADING TOMORROW</Text>
-          </View>
-          <View style={s.titleCell}>
-            <Text style={s.titleTop}>STUDENT</Text>
-            <Text style={s.titleMain}>REPORT CARD</Text>
-          </View>
+        <View style={s.header}>
+          <Image style={s.logo} src="/SUAC-LOGO.svg" />
+          <Text style={s.schoolName}>{data.school.name.toUpperCase()}</Text>
+          <Text style={s.schoolInfo}>
+            {data.school.address || "Teshi, Accra"}{" "}
+            {data.school.phone ? `TEL: ${data.school.phone}` : ""}
+            {"\n"}
+            {data.school.email ? `EMAIL: ${data.school.email}` : ""}
+          </Text>
+          <Text style={s.reportTitle}>TERMLY REPORT</Text>
         </View>
 
-        {/* Info grid */}
+        {/* Student Info */}
         <View style={s.infoGrid}>
-          <InfoCell label="Student Name" value={data.student.fullName} />
-          <InfoCell label="Term" value={data.term.name} />
-          <InfoCell label="Student ID" value={data.student.admissionNumber} />
-          <InfoCell
-            label="Class Teacher"
-            value={data.classTeacherName ?? "—"}
-          />
-          <InfoCell label="Class / Grade" value={data.student.className} />
-          <InfoCell label="Attendance Rate" value={attendanceLabel} />
-          <InfoCell label="Academic Year" value={data.term.academicYear} />
-          <InfoCell label="Position" value={positionLabel} />
-        </View>
-
-        {/* Academic performance */}
-        <Text style={s.sectionBar}>ACADEMIC PERFORMANCE</Text>
-        <View style={s.tableHead}>
-          <Text style={s.thLeft}>SUBJECT</Text>
-          <Text style={s.th}>SCORE</Text>
-          <Text style={s.th}>GRADE</Text>
-          <Text style={s.th}>REMARKS</Text>
-        </View>
-        {data.subjects.map((row) => (
-          <View style={s.tr} key={row.subjectId}>
-            <Text style={s.tdLeft}>{row.subjectName}</Text>
-            <Text style={s.td}>{fmt(row.finalScore)}</Text>
-            <Text style={s.td}>{row.grade}</Text>
-            <Text style={s.td}>{row.remark || "—"}</Text>
-          </View>
-        ))}
-        {data.subjects.length === 0 && (
-          <View style={s.tr}>
-            <Text
-              style={[
-                s.tdLeft,
-                {
-                  flex: 6,
-                  textAlign: "center",
-                  color: "#94a3b8",
-                  borderRight: "1 solid #002D62",
-                },
-              ]}>
-              No subjects configured for this division.
-            </Text>
-          </View>
-        )}
-        <View style={s.overallRow}>
-          <Text
-            style={[
-              s.tdLeft,
-              {
-                flex: 4,
-                textAlign: "right",
-                fontFamily: "Helvetica-Bold",
-                borderBottom: "none",
-              },
-            ]}>
-            OVERALL AVERAGE
-          </Text>
-          <Text style={[s.td, s.yellow]}>{fmt(data.totals.averageScore)}</Text>
-          <Text style={[s.td, { textAlign: "right", borderBottom: "none" }]}>
-            {data.totals.position > 0
-              ? `Position ${data.totals.position} / ${data.totals.classSize}`
-              : "Overall position"}
-          </Text>
-          <Text style={[s.td, { borderBottom: "none" }]} />
-        </View>
-
-        {/* Teacher comment */}
-        <Text style={s.sectionBar}>TEACHER COMMENT</Text>
-        <View style={s.comment}>
-          <Text>
-            {data.teacherRemark ||
-              "Enter teacher's comment about the student's progress, behavior and attitude."}
-          </Text>
-        </View>
-
-        {/* Proficiency */}
-        <Text style={s.sectionBar}>PROFICIENCY RECOGNITION AND ATTITUDE</Text>
-        <View style={s.tableHead}>
-          <Text style={s.thLeft}>AREA</Text>
-          {RATING_COLS.map((c) => (
-            <Text key={c} style={s.th}>
-              {c}
-            </Text>
-          ))}
-        </View>
-        {(data.proficiency ?? []).map((p) => (
-          <View style={s.tr} key={p.area}>
-            <Text style={s.tdLeft}>{p.area}</Text>
-            {RATING_COLS.map((c) => (
-              <Text key={c} style={s.td}>
-                {p.rating === c ? "X" : ""}
+          <View style={s.infoCol}>
+            <View style={s.infoRow}>
+              <Text style={s.infoLabel}>Name of Student:</Text>
+              <Text style={s.infoValue}>{data.student.fullName}</Text>
+            </View>
+            <View style={s.infoRow}>
+              <Text style={s.infoLabel}>Class:</Text>
+              <Text style={s.infoValue}>{data.student.className}</Text>
+            </View>
+            <View style={s.infoRow}>
+              <Text style={s.infoLabel}>Raw Score:</Text>
+              <Text style={s.infoValue}>
+                {data.totals.totalScore} (Avg: {data.totals.averageScore}%)
               </Text>
-            ))}
+            </View>
           </View>
-        ))}
-        {(data.proficiency ?? []).length === 0 && (
-          <View style={s.tr}>
-            <Text
-              style={[
-                s.tdLeft,
-                {
-                  flex: 6,
-                  textAlign: "center",
-                  color: "#94a3b8",
-                  borderRight: "1 solid #002D62",
-                },
-              ]}>
-              No proficiency ratings entered yet.
-            </Text>
+          <View style={s.infoCol}>
+            <View style={s.infoRow}>
+              <Text style={[s.infoLabel, { width: 60 }]}>Date:</Text>
+              <Text style={s.infoValue}>
+                {new Date().toLocaleDateString("en-GB")}
+              </Text>
+            </View>
+            <View style={s.infoRow}>
+              <Text style={[s.infoLabel, { width: 60 }]}>No. On Roll:</Text>
+              <Text style={s.infoValue}>{data.totals.classSize}</Text>
+            </View>
+            <View style={s.infoRow}>
+              <Text style={[s.infoLabel, { width: 60 }]}>Age:</Text>
+              <Text style={s.infoValue}>
+                {calculateAge(data.student.dateOfBirth)}
+              </Text>
+            </View>
           </View>
-        )}
+        </View>
 
-        {/* Verification footer */}
-        <View style={s.footer}>
-          <View>
-            <Text style={s.footerBold}>System-generated report card</Text>
-            <Text>
-              Verify at supremeacademy.netlify.app/verify · Ref{" "}
-              <Text style={s.mono}>{refId}</Text>
+        <Text style={s.termTitle}>
+          {data.term.name} {data.term.academicYear}
+        </Text>
+
+        {/* Table */}
+        <View style={s.table}>
+          <View style={s.tr}>
+            <Text style={s.thLeft}>SUBJECTS</Text>
+            <Text style={s.th}>CLASS SCORE</Text>
+            <Text style={s.th}>EXAM SCORE</Text>
+            <Text style={s.th}>TOTAL SCORE</Text>
+            <Text style={s.th}>CLASS AVERAGE</Text>
+            <Text style={s.th}>GRADE</Text>
+            <Text style={[s.th, { borderRightWidth: 0 }]}>REMARKS</Text>
+          </View>
+          {data.subjects.map((row, i) => {
+            const isLast = i === data.subjects.length - 1;
+            const classAvg =
+              (row as any).classAverage ?? data.totals.averageScore;
+            return (
+              <View style={s.tr} key={row.subjectId}>
+                <Text
+                  style={
+                    isLast ? [s.tdLeft, { borderBottomWidth: 0 }] : s.tdLeft
+                  }>
+                  {row.subjectName}
+                </Text>
+                <Text style={isLast ? [s.td, { borderBottomWidth: 0 }] : s.td}>
+                  {fmt(row.assessmentRaw)}
+                </Text>
+                <Text style={isLast ? [s.td, { borderBottomWidth: 0 }] : s.td}>
+                  {fmt(row.examRaw)}
+                </Text>
+                <Text
+                  style={
+                    isLast
+                      ? [
+                          s.td,
+                          { borderBottomWidth: 0, fontFamily: "Times-Bold" },
+                        ]
+                      : [s.td, { fontFamily: "Times-Bold" }]
+                  }>
+                  {fmt(row.finalScore)}
+                </Text>
+                <Text style={isLast ? [s.td, { borderBottomWidth: 0 }] : s.td}>
+                  {fmt(classAvg)}
+                </Text>
+                <Text
+                  style={
+                    isLast
+                      ? [
+                          s.td,
+                          { borderBottomWidth: 0, fontFamily: "Times-Bold" },
+                        ]
+                      : [s.td, { fontFamily: "Times-Bold" }]
+                  }>
+                  {row.grade}
+                </Text>
+                <Text
+                  style={
+                    isLast ? [s.tdLast, { borderBottomWidth: 0 }] : s.tdLast
+                  }>
+                  {row.remark || "—"}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Footer Sections */}
+        <View style={s.footerGrid}>
+          <View style={s.billBox}>
+            <Text style={s.billHead}>
+              BILL FOR {data.term.name.toUpperCase()}
             </Text>
+            <View
+              style={[
+                s.billRow,
+                { backgroundColor: "#f3f4f6", fontFamily: "Times-Bold" },
+              ]}>
+              <Text style={s.billTdLeft}>SCHOOL FEES DETAILS</Text>
+              <Text style={s.billTdRight}>AMOUNT TO BE PAID</Text>
+            </View>
+            <View style={s.billRow}>
+              <Text style={s.billTdLeft}>ARREARS FROM LAST TERM</Text>
+              <Text style={s.billTdRight}>—</Text>
+            </View>
+            <View style={s.billRow}>
+              <Text style={s.billTdLeft}>CURRENT TUITION FEES</Text>
+              <Text style={s.billTdRight}>—</Text>
+            </View>
+            <View style={s.billRowLast}>
+              <Text style={s.billTdLeft}>TOTAL</Text>
+              <Text style={[s.billTdRight, { fontFamily: "Times-Bold" }]}>
+                —
+              </Text>
+            </View>
           </View>
-          <View>
-            <Text>Generated on {generatedOn}</Text>
-            <Text>Supreme Academy, Accra</Text>
+
+          <View style={s.rightFooter}>
+            <View style={s.signRow}>
+              <Text style={s.signLabel}>Attendance:</Text>
+              <Text style={s.signLine}>
+                {data.attendance
+                  ? `${data.attendance.present} out of ${data.attendance.total}`
+                  : "—"}
+              </Text>
+            </View>
+            <View style={s.signRow}>
+              <Text style={s.signLabel}>Interest:</Text>
+              <Text style={s.signLine}></Text>
+            </View>
+            <View style={s.signRow}>
+              <Text style={s.signLabel}>Conduct:</Text>
+              <Text style={s.signLine}></Text>
+            </View>
+            <View style={s.signRow}>
+              <Text style={s.signLabel}>Class Teacher's Report:</Text>
+              <Text style={[s.signLine, { minHeight: 40 }]}>
+                {data.teacherRemark}
+              </Text>
+            </View>
           </View>
+        </View>
+
+        {/* Headmaster Comment */}
+        <View style={s.bottomFooter}>
+          <Text style={s.signLabel}>Headmaster's Comment/Signature:</Text>
+          <Text style={[s.signLine, { minHeight: 40 }]}>
+            {data.headmasterRemark}
+          </Text>
         </View>
       </Page>
     </Document>
-  );
-}
-
-function InfoCell({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={s.infoCell}>
-      <Text style={s.infoLabel}>{label}</Text>
-      <Text style={s.infoValue}>{value}</Text>
-    </View>
   );
 }
