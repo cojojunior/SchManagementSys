@@ -21,12 +21,12 @@ const s = StyleSheet.create({
     padding: 24,
     fontSize: 9,
     fontFamily: "Helvetica",
-    color: "#0b2b45",
+    color: "#002D62",
   },
-  headerRow: { flexDirection: "row", height: 60 },
+  headerRow: { flexDirection: "row", height: 60, border: "1 solid #002D62" },
   logoCell: {
     width: "22%",
-    backgroundColor: "#FFF",
+    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -37,6 +37,7 @@ const s = StyleSheet.create({
     color: "white",
     padding: 8,
     justifyContent: "center",
+    borderLeft: "1 solid #002D62",
   },
   schoolName: { fontSize: 16, fontFamily: "Helvetica-Bold" },
   motto: { fontSize: 6, opacity: 0.8, marginTop: 3, letterSpacing: 1 },
@@ -46,6 +47,7 @@ const s = StyleSheet.create({
     padding: 8,
     justifyContent: "center",
     alignItems: "center",
+    borderLeft: "1 solid #002D62",
   },
   titleTop: { fontSize: 8, fontFamily: "Helvetica-Bold", letterSpacing: 1 },
   titleMain: { fontSize: 14, fontFamily: "Helvetica-Bold" },
@@ -54,12 +56,14 @@ const s = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     marginTop: 10,
-    border: "1 solid #0f6b6b",
+    borderTop: "1 solid #002D62",
+    borderLeft: "1 solid #002D62",
   },
   infoCell: {
     width: "50%",
     flexDirection: "row",
-    borderBottom: "1 solid #cfe3e3",
+    borderBottom: "1 solid #002D62",
+    borderRight: "1 solid #002D62",
   },
   infoLabel: {
     width: "50%",
@@ -69,7 +73,12 @@ const s = StyleSheet.create({
     fontFamily: "Helvetica-Bold",
     fontSize: 8,
   },
-  infoValue: { width: "50%", padding: 4, fontSize: 8 },
+  infoValue: {
+    width: "50%",
+    padding: 4,
+    fontSize: 8,
+    borderLeft: "1 solid #002D62",
+  },
 
   sectionBar: {
     backgroundColor: "#002D62",
@@ -78,17 +87,23 @@ const s = StyleSheet.create({
     marginTop: 10,
     fontFamily: "Helvetica-Bold",
     fontSize: 9,
+    borderTop: "1 solid #002D62",
+    borderLeft: "1 solid #002D62",
+    borderRight: "1 solid #002D62",
   },
 
   tableHead: {
     flexDirection: "row",
-    backgroundColor: "#0f6b6b",
+    backgroundColor: "#002D62",
     color: "white",
+    borderLeft: "1 solid #002D62",
+    borderTop: "1 solid #002D62",
   },
   th: {
     flex: 1,
     padding: 4,
-    border: "1 solid #0f6b6b",
+    borderRight: "1 solid #002D62",
+    borderBottom: "1 solid #002D62",
     fontFamily: "Helvetica-Bold",
     textAlign: "center",
     fontSize: 7,
@@ -96,7 +111,8 @@ const s = StyleSheet.create({
   thLeft: {
     flex: 3,
     padding: 4,
-    border: "1 solid #0f6b6b",
+    borderRight: "1 solid #002D62",
+    borderBottom: "1 solid #002D62",
     fontFamily: "Helvetica-Bold",
     fontSize: 7,
   },
@@ -104,25 +120,35 @@ const s = StyleSheet.create({
   td: {
     flex: 1,
     padding: 4,
-    border: "1 solid #cfe3e3",
+    borderRight: "1 solid #002D62",
+    borderBottom: "1 solid #002D62",
     textAlign: "center",
     fontSize: 8,
   },
-  tdLeft: { flex: 3, padding: 4, border: "1 solid #cfe3e3", fontSize: 8 },
+  tdLeft: {
+    flex: 3,
+    padding: 4,
+    borderRight: "1 solid #002D62",
+    borderBottom: "1 solid #002D62",
+    fontSize: 8,
+  },
 
   overallRow: {
     flexDirection: "row",
-    backgroundColor: "#0b2b45",
+    backgroundColor: "#002D62",
     color: "white",
+    borderLeft: "1 solid #002D62",
   },
   yellow: {
     backgroundColor: "#f5c518",
-    color: "#0b2b45",
+    color: "#002D62",
     fontFamily: "Helvetica-Bold",
   },
 
   comment: {
-    border: "1 solid #0f6b6b",
+    borderLeft: "1 solid #002D62",
+    borderRight: "1 solid #002D62",
+    borderBottom: "1 solid #002D62",
     minHeight: 60,
     padding: 6,
     color: "#475569",
@@ -132,13 +158,13 @@ const s = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    borderTop: "1 solid #0f6b6b",
+    borderTop: "1 solid #002D62",
     marginTop: 16,
     paddingTop: 6,
     fontSize: 7,
     color: "#64748b",
   },
-  footerBold: { fontFamily: "Helvetica-Bold", color: "#0b2b45" },
+  footerBold: { fontFamily: "Helvetica-Bold", color: "#002D62" },
   mono: { fontFamily: "Courier" },
 });
 
@@ -172,7 +198,7 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
           </View>
           <View style={s.nameCell}>
             <Text style={s.schoolName}>{data.school.name}</Text>
-            <Text style={s.motto}>MOTTO: DISCOVER TO RECOVER</Text>
+            <Text style={s.motto}>MOTTO: LEARNING TODAY, LEADING TOMORROW</Text>
           </View>
           <View style={s.titleCell}>
             <Text style={s.titleTop}>STUDENT</Text>
@@ -216,7 +242,12 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
             <Text
               style={[
                 s.tdLeft,
-                { flex: 6, textAlign: "center", color: "#94a3b8" },
+                {
+                  flex: 6,
+                  textAlign: "center",
+                  color: "#94a3b8",
+                  borderRight: "1 solid #002D62",
+                },
               ]}>
               No subjects configured for this division.
             </Text>
@@ -230,18 +261,18 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
                 flex: 4,
                 textAlign: "right",
                 fontFamily: "Helvetica-Bold",
-                borderTop: "1 solid #0b2b45",
+                borderBottom: "none",
               },
             ]}>
             OVERALL AVERAGE
           </Text>
           <Text style={[s.td, s.yellow]}>{fmt(data.totals.averageScore)}</Text>
-          <Text style={[s.td, { textAlign: "right" }]}>
+          <Text style={[s.td, { textAlign: "right", borderBottom: "none" }]}>
             {data.totals.position > 0
               ? `Position ${data.totals.position} / ${data.totals.classSize}`
               : "Overall position"}
           </Text>
-          <Text style={s.td} />
+          <Text style={[s.td, { borderBottom: "none" }]} />
         </View>
 
         {/* Teacher comment */}
@@ -278,7 +309,12 @@ export function ReportCardDocument({ data }: { data: ReportCardData }) {
             <Text
               style={[
                 s.tdLeft,
-                { flex: 6, textAlign: "center", color: "#94a3b8" },
+                {
+                  flex: 6,
+                  textAlign: "center",
+                  color: "#94a3b8",
+                  borderRight: "1 solid #002D62",
+                },
               ]}>
               No proficiency ratings entered yet.
             </Text>
