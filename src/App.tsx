@@ -30,9 +30,6 @@ import SubjectFormPage from "@/features/academics/subjects/SubjectFormPage";
 import StaffListPage from "@/features/staff/StaffListPage";
 import StaffDetailPage from "@/features/staff/StaffDetailPage";
 import StaffFormPage from "@/features/staff/StaffFormPage";
-import AssignmentListPage from "@/features/academics/assignments/AssignmentListPage";
-import AssignmentDetailPage from "@/features/academics/assignments/AssignmentDetailPage";
-import AssignmentFormPage from "@/features/academics/assignments/AssignmentFormPage";
 import AcademicYearsPage from "@/features/academics/academic-years/AcademicYearsPage";
 import GradingScalesPage from "@/features/academics/grading/GradingScalePage";
 import GradingScaleFormPage from "@/features/academics/grading/GradingScaleFormPage";
@@ -751,73 +748,6 @@ export default function App() {
               </RequireRole>
             }
           />
-
-          {/* Teaching Assignments */}
-          <Route
-            path="/admin/assignments"
-            element={
-              <RequireRole roles={["super_admin"]}>
-                <AssignmentListPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/admin/assignments/new"
-            element={
-              <RequireRole roles={["super_admin"]}>
-                <AssignmentFormPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/admin/assignments/:id"
-            element={
-              <RequireRole roles={["super_admin"]}>
-                <AssignmentDetailPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/admin/assignments/:id/edit"
-            element={
-              <RequireRole roles={["super_admin"]}>
-                <AssignmentFormPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/headmaster/assignments"
-            element={
-              <RequireRole roles={["headmaster"]}>
-                <AssignmentListPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/headmaster/assignments/:id"
-            element={
-              <RequireRole roles={["headmaster"]}>
-                <AssignmentDetailPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/teacher/assignments"
-            element={
-              <RequireRole roles={["teacher"]}>
-                <AssignmentListPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path="/teacher/assignments/:id"
-            element={
-              <RequireRole roles={["teacher"]}>
-                <AssignmentDetailPage />
-              </RequireRole>
-            }
-          />
-
           {/* Fee Structures */}
           <Route
             path="/admin/fees"
