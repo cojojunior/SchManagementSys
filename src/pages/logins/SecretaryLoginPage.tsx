@@ -67,9 +67,6 @@ export default function SecretaryLoginPage() {
             <h1 className="mt-5 text-xl font-bold text-emerald-900">
               Secretary Portal
             </h1>
-            <p className="text-sm text-emerald-700/70 mt-1">
-              Records & finances
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

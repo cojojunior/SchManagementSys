@@ -67,9 +67,6 @@ export default function HeadmasterLoginPage() {
             <h1 className="mt-5 text-xl font-bold text-amber-900">
               Headmaster Portal
             </h1>
-            <p className="text-sm text-amber-700/70 mt-1">
-              Review & publish results
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

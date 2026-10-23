@@ -65,9 +65,6 @@ export default function TeacherLoginPage() {
             <h1 className="mt-5 text-xl font-bold text-sky-900">
               Teacher Portal
             </h1>
-            <p className="text-sm text-sky-700/70 mt-1">
-              Enter marks & remarks
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
