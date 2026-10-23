@@ -89,45 +89,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function syncSession() {
+    if (!supabase) return;
+    const { data } = await supabase.auth.getSession();
+    const base = sessionToUser(data.session);
+    if (!base) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+    const enriched = await enrichUser(base);
+    setUser(enriched);
+    setLoading(false);
+  }
+
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
       return;
     }
 
-    let cancelled = false;
+   
+    syncSession();
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (cancelled) return;
-      const base = sessionToUser(data.session);
-      if (!base) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      const enriched = await enrichUser(base);
-      if (!cancelled) {
-        setUser(enriched);
-        setLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (cancelled) return;
-      const base = sessionToUser(session);
-      if (!base) {
-        setUser(null);
-        return;
-      }
-      const enriched = await enrichUser(base);
-      if (!cancelled) setUser(enriched);
-    });
+    const handleFocus = () => {
+      syncSession();
+    };
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      cancelled = true;
-      subscription.unsubscribe();
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -139,6 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!supabase) {
           return { ok: false, reason: "Supabase is not configured." };
         }
+        // Clear current session first
+        await supabase.auth.signOut();
+
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
           password,
@@ -146,6 +140,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           return { ok: false, reason: "Invalid email or password." };
         }
+
+        // Immediately sync this window's context
+        await syncSession();
         return { ok: true };
       },
       async signOut() {
@@ -153,15 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       },
       async refreshUser() {
-        if (!supabase) return;
-        const { data } = await supabase.auth.getSession();
-        const base = sessionToUser(data.session);
-        if (!base) {
-          setUser(null);
-          return;
-        }
-        const enriched = await enrichUser(base);
-        setUser(enriched);
+        await syncSession();
       },
     }),
     [user, loading],
