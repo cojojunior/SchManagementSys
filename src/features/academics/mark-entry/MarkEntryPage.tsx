@@ -22,7 +22,6 @@ import type { MarkEntryRow } from "@/types/score";
 import { cn } from "@/lib/cn";
 import { useReturnToList } from "@/hooks/useReturnToList";
 
-
 export default function MarkEntryPage() {
   const { id: assessmentId = "" } = useParams();
   const navigate = useNavigate();
@@ -70,13 +69,16 @@ export default function MarkEntryPage() {
       const scoreByStudent = new Map(
         existingScores.map((s) => [s.studentId, s]),
       );
+
       const initialRows: MarkEntryRow[] = roster.data.map((st) => {
         const existing = scoreByStudent.get(st.id);
         return {
           studentId: st.id,
           studentName: `${st.firstName} ${st.lastName}`,
           admissionNumber: st.admissionNumber,
-          assessmentRaw: existing?.assessmentRaw ?? null,
+          assessmentRaw: existing?.assessmentRaw ?? null, // 1st CA
+          // @ts-ignore - We will add this to the service type shortly
+          assessment2Raw: existing?.assessment2Raw ?? null, // 2nd CA
           examRaw: existing?.examRaw ?? null,
           assessmentWeighted: existing?.assessmentWeighted ?? 0,
           examWeighted: existing?.examWeighted ?? 0,
@@ -115,6 +117,7 @@ export default function MarkEntryPage() {
           w.examPercent,
           s,
         );
+
         const aw =
           r.assessmentRaw !== null && asm.maxAssessmentScore > 0
             ? Math.round(
@@ -128,6 +131,7 @@ export default function MarkEntryPage() {
             ? Math.round((r.examRaw / asm.maxExamScore) * w.examPercent * 100) /
               100
             : 0;
+
         return {
           ...r,
           assessmentWeighted: aw,
@@ -140,7 +144,6 @@ export default function MarkEntryPage() {
     },
     [],
   );
-  
 
   function updateRow(studentId: string, patch: Partial<MarkEntryRow>) {
     if (!assessment || !weight || !scale) return;
@@ -180,7 +183,10 @@ export default function MarkEntryPage() {
 
   const stats = useMemo(() => {
     const entered = rows.filter(
-      (r) => r.assessmentRaw !== null && r.examRaw !== null,
+      (r) =>
+        r.assessmentRaw !== null &&
+        r.assessment2Raw !== null &&
+        r.examRaw !== null,
     ).length;
     const avg =
       rows.length === 0
@@ -209,13 +215,12 @@ export default function MarkEntryPage() {
   return (
     <>
       <PageHeader
-        title={`Mark Entry — ${assessment.className} · ${assessment.subjectName}`}
-        description={`${assessment.termName} · ${assessment.academicYear} · Assessment /${assessment.maxAssessmentScore} · Exam /${assessment.maxExamScore}`}
+        title={`Assessments — ${assessment.className} · ${assessment.subjectName}`}
+        description={`${assessment.termName} · ${assessment.academicYear} · Max CA /${assessment.maxAssessmentScore} · Exam /${assessment.maxExamScore}`}
         action={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4" />
-              Back
+              <ArrowLeft className="h-4 w-4" /> Back
             </Button>
             <RoleGate resource="scores" action="update">
               <Button
@@ -232,8 +237,7 @@ export default function MarkEntryPage() {
                 size="sm"
                 onClick={() => setConfirmSubmit(true)}
                 disabled={submitting || stats.entered !== stats.total}>
-                <Send className="h-4 w-4" />
-                Submit
+                <Send className="h-4 w-4" /> Submit
               </Button>
             </RoleGate>
           </div>
@@ -264,23 +268,21 @@ export default function MarkEntryPage() {
       {stats.entered < stats.total && (
         <div className="mb-4 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
           <AlertCircle className="h-4 w-4" />
-          {stats.total - stats.entered} student
-          {stats.total - stats.entered === 1 ? "" : "s"} still missing marks.
-          You must complete all entries before submitting.
+          {stats.total - stats.entered} student(s) still missing marks. You must
+          complete all entries before submitting.
         </div>
       )}
 
       {saved && (
         <div className="mb-4 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2.5">
-          <CheckCircle2 className="h-4 w-4" />
-          Draft saved.
+          <CheckCircle2 className="h-4 w-4" /> Draft saved.
         </div>
       )}
 
       <Card>
         <CardHeader
-          title="Marks"
-          description={`Weighted: Assessment ${weight.assessmentPercent}% + Exam ${weight.examPercent}% = 100%`}
+          title="Continuous Assessments"
+          description="Enter 1st and 2nd CA scores. Final scores are calculated automatically."
         />
         <CardBody className="p-0">
           <div className="overflow-x-auto">
@@ -289,16 +291,16 @@ export default function MarkEntryPage() {
                 <tr>
                   <th className="text-left px-4 py-2.5 font-medium">#</th>
                   <th className="text-left px-4 py-2.5 font-medium">Student</th>
-                  <th className="text-left px-4 py-2.5 font-medium">
-                    Admission #
+                  <th className="text-left px-4 py-2.5 font-medium">ID</th>
+                  <th className="text-left px-4 py-2.5 font-medium w-32">
+                    1st Assessment
                   </th>
                   <th className="text-left px-4 py-2.5 font-medium w-32">
-                    Assessment /{assessment.maxAssessmentScore}
+                    2nd Assessment
                   </th>
-                  <th className="text-left px-4 py-2.5 font-medium w-32">
-                    Exam /{assessment.maxExamScore}
+                  <th className="text-right px-4 py-2.5 font-medium">
+                    Total CA
                   </th>
-                  <th className="text-right px-4 py-2.5 font-medium">Final</th>
                   <th className="text-left px-4 py-2.5 font-medium">Grade</th>
                 </tr>
               </thead>
@@ -308,18 +310,24 @@ export default function MarkEntryPage() {
                     <td
                       colSpan={7}
                       className="px-4 py-12 text-center text-ink-500">
-                      No students enrolled in this class yet.
+                      No students enrolled.
                     </td>
                   </tr>
                 ) : (
                   rows.map((r, i) => {
-                    const invalidA =
+                    const invalidA1 =
                       r.assessmentRaw !== null &&
                       (r.assessmentRaw < 0 ||
                         r.assessmentRaw > assessment.maxAssessmentScore);
-                    const invalidE =
-                      r.examRaw !== null &&
-                      (r.examRaw < 0 || r.examRaw > assessment.maxExamScore);
+                    const invalidA2 =
+                      r.assessment2Raw !== null &&
+                      (r.assessment2Raw < 0 ||
+                        r.assessment2Raw > assessment.maxAssessmentScore);
+
+                    // Display the raw sum of 1st + 2nd
+                    const totalCa =
+                      (r.assessmentRaw || 0) + (r.assessment2Raw || 0);
+
                     return (
                       <tr key={r.studentId} className="hover:bg-ink-50/60">
                         <td className="px-4 py-2 text-ink-400 tabular-nums">
@@ -331,6 +339,8 @@ export default function MarkEntryPage() {
                         <td className="px-4 py-2 font-mono text-xs text-ink-500">
                           {r.admissionNumber}
                         </td>
+
+                        {/* 1st Assessment */}
                         <td className="px-4 py-2">
                           <Input
                             type="number"
@@ -338,7 +348,7 @@ export default function MarkEntryPage() {
                             max={assessment.maxAssessmentScore}
                             step={1}
                             value={r.assessmentRaw ?? ""}
-                            invalid={invalidA}
+                            invalid={invalidA1}
                             onChange={(e) =>
                               updateRow(r.studentId, {
                                 assessmentRaw:
@@ -350,17 +360,19 @@ export default function MarkEntryPage() {
                             className="h-9 w-24"
                           />
                         </td>
+
+                        {/* 2nd Assessment */}
                         <td className="px-4 py-2">
                           <Input
                             type="number"
                             min={0}
-                            max={assessment.maxExamScore}
+                            max={assessment.maxAssessmentScore}
                             step={1}
-                            value={r.examRaw ?? ""}
-                            invalid={invalidE}
+                            value={r.assessment2Raw ?? ""}
+                            invalid={invalidA2}
                             onChange={(e) =>
                               updateRow(r.studentId, {
-                                examRaw:
+                                assessment2Raw:
                                   e.target.value === ""
                                     ? null
                                     : Number(e.target.value),
@@ -369,9 +381,11 @@ export default function MarkEntryPage() {
                             className="h-9 w-24"
                           />
                         </td>
+
                         <td className="px-4 py-2 text-right tabular-nums font-semibold text-ink-900">
-                          {r.finalScore.toFixed(1)}
+                          {totalCa}
                         </td>
+
                         <td className="px-4 py-2">
                           <div className="flex items-center gap-2">
                             <span
@@ -398,9 +412,8 @@ export default function MarkEntryPage() {
 
       <div className="flex items-center justify-between mt-6">
         <p className="text-xs text-ink-500">
-          Grades calculated automatically from the configured grading scale.
-          Final scores are rounded half-up to the nearest whole for grade
-          lookup.
+          Note: The total CA is calculated from the 1st and 2nd scores. Ensure
+          scores do not exceed the maximum allowed.
         </p>
       </div>
 
@@ -409,8 +422,8 @@ export default function MarkEntryPage() {
         onClose={() => setConfirmSubmit(false)}
         onConfirm={handleSubmit}
         loading={submitting}
-        title="Submit marks for review?"
-        message="Once submitted, marks are sent to the Headmaster for review. You will not be able to edit them until they are returned for correction."
+        title="Submit assessments?"
+        message="Once submitted, marks are sent to the Headmaster for review. You will not be able to edit them until they are returned."
         confirmLabel="Submit"
       />
     </>

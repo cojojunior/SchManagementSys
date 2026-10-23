@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Users,
   GraduationCap,
-  ClipboardList,
   CreditCard,
   Ticket,
   BookOpen,
@@ -49,9 +48,10 @@ const NAV: Record<Role, NavItem[]> = {
   teacher: [
     { to: "/teacher", label: "Dashboard", icon: LayoutDashboard },
     { to: "/teacher/classes", label: "My Classes", icon: School },
-    { to: "/teacher/assignments", label: "Assignments", icon: ClipboardList },
     { to: "/teacher/assessments", label: "Assessments", icon: FileSpreadsheet },
+    { to: "/teacher/final-exams", label: "Final Exams", icon: ClipboardCheck },
     { to: "/teacher/results", label: "Results", icon: ClipboardCheck },
+
   ],
 
   secretary: [

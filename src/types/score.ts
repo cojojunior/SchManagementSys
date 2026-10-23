@@ -25,6 +25,7 @@ export type MarkEntryRow = {
   studentName: string;
   admissionNumber: string;
   assessmentRaw: number | null;
+  assessment2Raw: number | null;
   examRaw: number | null;
   assessmentWeighted: number;
   examWeighted: number;

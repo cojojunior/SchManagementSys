@@ -37,4 +37,5 @@ export type TeachingAssignmentFilters = {
   subjectId?: UUID | "all";
   academicYear?: string | "all";
   isActive?: "true" | "false" | "all";
+  teacherId?: string | "all";
 };

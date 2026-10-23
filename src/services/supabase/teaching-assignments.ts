@@ -83,6 +83,10 @@ export const teachingAssignmentsService = {
     const { data, count, error } = await query;
     if (error) throw new Error(error.message);
 
+    if (filters.teacherId && filters.teacherId !== "all") {
+      query = query.eq("teacher_id", filters.teacherId);
+    }
+
     return {
       data: (data as unknown as DbAssignment[]).map(toDomain),
       total: count ?? 0,
