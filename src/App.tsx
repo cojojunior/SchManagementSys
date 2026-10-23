@@ -4,6 +4,7 @@ import { RequireRole } from "@/features/auth/RequireRole";
 import { AppShell } from "@/layouts/AppShell";
 import LandingPage from "@/pages/LandingPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import AdminLoginPage from "@/pages/admin/AdminLoginPage";
 import AdminDashboard from "@/pages/dashboards/AdminDashboard";
 import HeadmasterDashboard from "@/pages/dashboards/HeadmasterDashboard";
 import TeacherDashboard from "@/pages/dashboards/TeacherDashboard";
@@ -81,6 +82,7 @@ export default function App() {
           element={<Navigate to="/login?role=super_admin" replace />}
         />
 
+        <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />

@@ -8,6 +8,7 @@ import { FormField } from "@/components/ui/FormField";
 import { supabase } from "@/lib/supabase";
 import { ROLE_HOME, type Role } from "@/lib/constants";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+
 export default function StaffLoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -25,6 +26,7 @@ export default function StaffLoginPage() {
         return;
       }
 
+      // Force clear any existing session
       await supabase.auth.signOut();
 
       const { data, error: signInError } =
@@ -39,6 +41,7 @@ export default function StaffLoginPage() {
       }
 
       const role = data.user.app_metadata?.role as Role | undefined;
+
       if (!role) {
         setError(
           "This account isn't configured properly. Please contact the administrator.",
@@ -47,7 +50,13 @@ export default function StaffLoginPage() {
         return;
       }
 
-      // We can use the ROLE_HOME constant directly here
+      // Block Super Admins from using the staff portal
+      if (role === "super_admin") {
+        await supabase.auth.signOut();
+        setError("Super Admins must log in at /admin");
+        return;
+      }
+
       navigate(ROLE_HOME[role] ?? "/", { replace: true });
     } finally {
       setWorking(false);
