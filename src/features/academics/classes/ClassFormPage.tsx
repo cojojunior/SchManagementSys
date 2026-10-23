@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
+import { useAuth } from "@/features/auth/AuthContext";
 import { classesService } from "@/services/supabase/classes";
 import { useReturnToList } from "@/hooks/useReturnToList";
 
@@ -27,12 +28,18 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function ClassFormPage() {
+  const { user } = useAuth();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const returnToList = useReturnToList();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Failsafe: Teachers cannot create or edit classes
+  if (user?.role === "teacher") {
+    return <Navigate to="/teacher/classes" replace />;
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

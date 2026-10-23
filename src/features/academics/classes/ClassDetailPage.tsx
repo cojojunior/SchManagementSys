@@ -9,22 +9,41 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RoleGate } from "@/features/auth/RoleGate";
 import { classesService } from "@/services/supabase/classes";
+import { studentsService } from "@/services/supabase/student";
 import type { SchoolClass } from "@/types/class";
+import type { Student } from "@/types/student";
 
 export default function ClassDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const [cls, setCls] = useState<SchoolClass | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    classesService.get(id).then((c) => {
-      setCls(c);
-      setLoading(false);
-    });
+
+    Promise.all([
+      classesService.get(id),
+      studentsService.list({ classId: id, status: "active" }, 1, 200),
+    ])
+      .then(([classData, studentsData]) => {
+        if (cancelled) return;
+        setCls(classData);
+        setStudents(studentsData.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   async function handleDelete() {
@@ -85,9 +104,9 @@ export default function ClassDetailPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-1">
           <CardHeader title="Class information" />
-          <CardBody className="grid gap-4 sm:grid-cols-2">
+          <CardBody className="grid gap-4 sm:grid-cols-1">
             <Field label="Name" value={cls.name} />
             <Field label="Division" value={cls.division.toUpperCase()} />
             <Field label="Level" value={String(cls.level)} />
@@ -98,8 +117,8 @@ export default function ClassDetailPage() {
             />
             <Field label="Academic year" value={cls.academicYear} />
             <Field label="Capacity" value={String(cls.capacity)} />
-            <Field label="Enrolled students" value={String(cls.studentCount)} />
-            <div className="sm:col-span-2">
+            <Field label="Enrolled students" value={String(students.length)} />
+            <div>
               <div className="text-xs text-ink-500 mb-1">Status</div>
               <Badge tone={cls.status === "active" ? "success" : "neutral"}>
                 {cls.status}
@@ -108,30 +127,57 @@ export default function ClassDetailPage() {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader
             title="Enrolled students"
             action={
-              <Link to="/admin/students">
-                <Button variant="ghost" size="sm">
-                  View all
-                </Button>
-              </Link>
+              <span className="text-sm text-ink-500">
+                {students.length} student{students.length === 1 ? "" : "s"}
+              </span>
             }
           />
-          <CardBody>
-            {cls.studentCount === 0 ? (
-              <EmptyState
-                icon={<Users className="h-5 w-5" />}
-                title="No students yet"
-                description="Students appear here once assigned to this class."
-              />
+          <CardBody className="p-0">
+            {students.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  icon={<Users className="h-5 w-5" />}
+                  title="No students yet"
+                  description="Students appear here once assigned to this class."
+                />
+              </div>
             ) : (
-              <p className="text-sm text-ink-600">
-                {cls.studentCount} student{cls.studentCount === 1 ? "" : "s"}{" "}
-                enrolled. Full list arrives with the roster view in a later
-                phase.
-              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-ink-50 text-ink-600 text-xs uppercase tracking-wide">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 font-medium">
+                        Name
+                      </th>
+                      <th className="text-left px-4 py-2.5 font-medium">
+                        Admission #
+                      </th>
+                      <th className="text-left px-4 py-2.5 font-medium">
+                        Gender
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink-200">
+                    {students.map((st) => (
+                      <tr key={st.id} className="hover:bg-ink-50/60">
+                        <td className="px-4 py-2 font-medium text-ink-900">
+                          {st.firstName} {st.lastName}
+                        </td>
+                        <td className="px-4 py-2 font-mono text-xs text-ink-500">
+                          {st.admissionNumber}
+                        </td>
+                        <td className="px-4 py-2 text-ink-600 capitalize">
+                          {st.gender}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </CardBody>
         </Card>
