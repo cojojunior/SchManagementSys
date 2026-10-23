@@ -1,236 +1,228 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Search, FileSpreadsheet } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Save } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import {
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+  TableEmpty,
+} from "@/components/ui/Table";
+import { Pagination } from "@/components/ui/Pagination";
+import { useList } from "@/hooks/useList";
 import { useAuth } from "@/features/auth/AuthContext";
-import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
 import { assessmentsService } from "@/services/supabase/assessments";
-import { studentsService } from "@/services/supabase/student";
-import { scoresService } from "@/services/supabase/scores";
-import type { TeachingAssignment } from "@/types/teaching-assignment";
-import type { Student } from "@/types/student";
-import type { Assessment } from "@/types/assessment";
-import type { MarkEntryRow } from "@/types/score";
+import { teachingAssignmentsService } from "@/services/supabase/teaching-assignments";
+import type { Assessment, AssessmentFilters } from "@/types/assessment";
 
-export default function FinalExamsPage() {
+const PAGE_SIZE = 10;
+
+const STATUS_TONE: Record<string, "neutral" | "warning" | "success" | "info"> =
+  {
+    draft: "neutral",
+    open: "info",
+    closed: "success",
+  };
+
+export default function AssessmentListPage() {
   const { user } = useAuth();
-  const [assignments, setAssignments] = useState<TeachingAssignment[]>([]);
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>("");
-  const [students, setStudents] = useState<Student[]>([]);
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
-  const [scores, setScores] = useState<Record<string, number | null>>({});
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const isTeacher = user?.role === "teacher";
 
-  // 1. Load the teacher's assignments
+  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
+
+  // 1. Load the teacher's specific assignments to build the dropdowns
   useEffect(() => {
-    if (!user?.id) return;
-    // Assuming the service uses a filter object
+    if (!user?.id || !isTeacher) return;
+
     teachingAssignmentsService
       .list({ teacherId: user.id }, 1, 200)
       .then((res) => {
-        setAssignments(res.data);
-        if (res.data.length > 0) setSelectedAssignmentId(res.data[0].id);
-      })
-      .catch(console.error);
-  }, [user?.id]);
+        // Extract unique classes
+        const uniqueClasses = Array.from(
+          new Map(
+            res.data.map((a) => [
+              a.classId,
+              { id: a.classId, name: a.className },
+            ]),
+          ).values(),
+        );
+        // Extract unique subjects
+        const uniqueSubjects = Array.from(
+          new Map(
+            res.data.map((a) => [
+              a.subjectId,
+              { id: a.subjectId, name: a.subjectName },
+            ]),
+          ).values(),
+        );
 
-  // 2. When an assignment is selected, load the students and their current exam scores
-  useEffect(() => {
-    if (!selectedAssignmentId) return;
-    const assignment = assignments.find((a) => a.id === selectedAssignmentId);
-    if (!assignment) return;
-
-    setLoading(true);
-
-    assessmentsService
-      .list(
-        {
-          classId: assignment.classId,
-          subjectId: assignment.subjectId,
-          termId: assignment.termId,
-        },
-        1,
-        1,
-      )
-      .then(async (res) => {
-        const asm = res.data[0];
-        if (!asm) {
-          setStudents([]);
-          setAssessment(null);
-          setLoading(false);
-          return;
-        }
-        setAssessment(asm);
-
-        const [roster, existingScores] = await Promise.all([
-          studentsService.list(
-            { classId: assignment.classId, status: "active" },
-            1,
-            200,
-          ),
-          scoresService.listByAssessment(asm.id),
-        ]);
-
-        const scoreMap: Record<string, number | null> = {};
-        existingScores.forEach((s) => {
-          scoreMap[s.studentId] = s.examRaw;
-        });
-
-        setStudents(roster.data);
-        setScores(scoreMap);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
+        setClasses(uniqueClasses);
+        setSubjects(uniqueSubjects);
       });
-  }, [selectedAssignmentId, assignments]);
+  }, [user?.id, isTeacher]);
 
-  const handleScoreChange = (studentId: string, val: string) => {
-    setScores((prev) => ({
-      ...prev,
-      [studentId]: val === "" ? null : Number(val),
-    }));
-    setSaved(false);
-  };
+  const fetcher = useCallback(
+    (f: AssessmentFilters, p: number, ps: number) => {
+      // 2. If teacher, force the filter to only their ID
+      const finalFilters = isTeacher ? { ...f, teacherId: user?.id } : f;
+      return assessmentsService.list(finalFilters, p, ps);
+    },
+    [isTeacher, user?.id],
+  );
 
-   const handleSave = async () => {
-     if (!assessment) return;
-     setSaving(true);
-
-     try {
-       const rows: MarkEntryRow[] = students.map((st) => ({
-         studentId: st.id,
-         studentName: `${st.firstName} ${st.lastName}`,
-         admissionNumber: st.admissionNumber,
-         assessmentRaw: null,
-         assessment2Raw: null,
-         examRaw: scores[st.id] ?? null,
-         assessmentWeighted: 0,
-         examWeighted: 0,
-         finalScore: 0,
-         grade: "—",
-         gradeLabel: "—",
-         remark: "",
-       }));
-
-       await scoresService.saveScores({ assessmentId: assessment.id, rows });
-       setSaved(true);
-       setTimeout(() => setSaved(false), 2500);
-     } catch (err) {
-       console.error("Failed to save exam scores:", err);
-     } finally {
-       setSaving(false);
-     }
-   };
+  const list = useList<Assessment, AssessmentFilters>({
+    fetcher,
+    initialFilters: {
+      search: "",
+      classId: "all",
+      subjectId: "all",
+      termId: "all",
+      academicYear: "all",
+      status: "all",
+    },
+    pageSize: PAGE_SIZE,
+  });
 
   return (
     <>
       <PageHeader
-        title="Final Exams"
-        description="Manage final examination scores for your assigned classes and subjects."
+        title="Assessments"
+        description={`${list.total} assessment${list.total === 1 ? "" : "s"}`}
       />
 
-      <Card className="mb-6">
-        <CardBody>
-          <label className="text-sm font-medium text-ink-700 block mb-1.5">
-            Select Class & Subject
-          </label>
-          <Select
-            value={selectedAssignmentId}
-            onChange={(e) => setSelectedAssignmentId(e.target.value)}>
-            {assignments.length === 0 && (
-              <option value="">No assignments found</option>
-            )}
-            {assignments.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.className} - {a.subjectName} ({a.termName})
-              </option>
-            ))}
-          </Select>
-        </CardBody>
-      </Card>
-
       <Card>
-        <CardHeader
-          title="Exam Scores"
-          description={
-            assessment
-              ? `Enter the final exam score out of ${assessment.maxExamScore}.`
-              : "Select an assignment to begin."
-          }
-        />
-        <CardBody className="p-0">
-          {loading ? (
-            <div className="p-4 text-sm text-ink-500">Loading students...</div>
-          ) : students.length === 0 ? (
-            <div className="p-4 text-sm text-ink-500">
-              No students found for this assignment.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-ink-50 text-ink-600 text-xs uppercase tracking-wide">
-                  <tr>
-                    <th className="text-left px-4 py-2.5 font-medium">
-                      Student
-                    </th>
-                    <th className="text-left px-4 py-2.5 font-medium">ID</th>
-                    <th className="text-left px-4 py-2.5 font-medium">
-                      Final Exam Score
-                    </th>
-                    <th className="text-left px-4 py-2.5 font-medium">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ink-200">
-                  {students.map((st) => (
-                    <tr key={st.id}>
-                      <td className="px-4 py-2 font-medium">
-                        {st.firstName} {st.lastName}
-                      </td>
-                      <td className="px-4 py-2 text-ink-500">
-                        {st.admissionNumber}
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          min={0}
-                          max={assessment?.maxExamScore ?? 100}
-                          className="h-9 w-24 border rounded px-2"
-                          value={scores[st.id] ?? ""}
-                          onChange={(e) =>
-                            handleScoreChange(st.id, e.target.value)
-                          }
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-xs text-ink-500">
-                        {scores[st.id] !== null && scores[st.id] !== undefined
-                          ? "Saved"
-                          : "Pending"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardBody>
-      </Card>
+        <div className="p-4 border-b border-ink-200 flex flex-col lg:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+            <Input
+              placeholder="Search by class, subject, term..."
+              className="pl-9"
+              value={list.filters.search ?? ""}
+              onChange={(e) => list.setFilters({ search: e.target.value })}
+            />
+          </div>
 
-      <div className="mt-6 flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving || loading || !assessment}>
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? "Saving..." : saved ? "Saved" : "Save Results"}
-        </Button>
-      </div>
+          {/* Only show Class dropdown if teacher teaches more than 1 class */}
+          {(!isTeacher || classes.length > 1) && (
+            <Select
+              value={list.filters.classId}
+              onChange={(e) =>
+                list.setFilters({ classId: e.target.value as any })
+              }
+              className="lg:w-40">
+              <option value="all">All classes</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          )}
+
+          {/* Only show Subject dropdown if teacher teaches more than 1 subject */}
+          {(!isTeacher || subjects.length > 1) && (
+            <Select
+              value={list.filters.subjectId}
+              onChange={(e) =>
+                list.setFilters({ subjectId: e.target.value as any })
+              }
+              className="lg:w-44">
+              <option value="all">All subjects</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </Select>
+          )}
+        </div>
+
+        <Table>
+          <THead>
+            <TR>
+              <TH>Class</TH>
+              <TH>Subject</TH>
+              <TH>Term</TH>
+              <TH>Score split</TH>
+              <TH>Status</TH>
+              <TH className="text-right">Actions</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {list.loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TR key={i}>
+                  <TD colSpan={6}>
+                    <div className="h-4 bg-ink-100 rounded animate-pulse" />
+                  </TD>
+                </TR>
+              ))
+            ) : list.data.length === 0 ? (
+              <TableEmpty colSpan={6}>
+                <div className="flex flex-col items-center gap-2">
+                  <FileSpreadsheet className="h-6 w-6 text-ink-400" />
+                  <span>
+                    No assessments assigned to you match your filters.
+                  </span>
+                </div>
+              </TableEmpty>
+            ) : (
+              list.data.map((a) => (
+                <TR key={a.id}>
+                  <TD>
+                    <Link
+                      to={a.id}
+                      className="font-medium text-ink-900 hover:text-brand-600">
+                      {a.className}
+                    </Link>
+                  </TD>
+                  <TD>
+                    <span className="font-mono text-xs text-ink-500 mr-2">
+                      {a.subjectCode}
+                    </span>
+                    {a.subjectName}
+                  </TD>
+                  <TD>
+                    {a.termName}
+                    <div className="text-xs text-ink-500">{a.academicYear}</div>
+                  </TD>
+                  <TD className="tabular-nums text-ink-500">
+                    {a.maxAssessmentScore} / {a.maxExamScore}
+                  </TD>
+                  <TD>
+                    <Badge tone={STATUS_TONE[a.status] ?? "neutral"}>
+                      {a.status}
+                    </Badge>
+                  </TD>
+                  <TD className="text-right">
+                    <Link to={a.id}>
+                      <Button variant="ghost" size="sm">
+                        View
+                      </Button>
+                    </Link>
+                  </TD>
+                </TR>
+              ))
+            )}
+          </TBody>
+        </Table>
+
+        <Pagination
+          page={list.page}
+          pageSize={list.pageSize}
+          total={list.total}
+          onPageChange={list.setPage}
+        />
+      </Card>
     </>
   );
 }

@@ -26,10 +26,12 @@ export default function MarkEntryPage() {
   const { id: assessmentId = "" } = useParams();
   const navigate = useNavigate();
   const returnToList = useReturnToList();
+
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [scale, setScale] = useState<GradingScale | null>(null);
   const [weight, setWeight] = useState<AssessmentWeight | null>(null);
   const [rows, setRows] = useState<MarkEntryRow[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -77,8 +79,7 @@ export default function MarkEntryPage() {
           studentName: `${st.firstName} ${st.lastName}`,
           admissionNumber: st.admissionNumber,
           assessmentRaw: existing?.assessmentRaw ?? null, // 1st CA
-          // @ts-ignore - We will add this to the service type shortly
-          assessment2Raw: existing?.assessment2Raw ?? null, // 2nd CA
+          assessment2Raw: (existing as any)?.assessment2Raw ?? null, // 2nd CA
           examRaw: existing?.examRaw ?? null,
           assessmentWeighted: existing?.assessmentWeighted ?? 0,
           examWeighted: existing?.examWeighted ?? 0,
@@ -108,6 +109,9 @@ export default function MarkEntryPage() {
       s: GradingScale,
     ): MarkEntryRow[] => {
       return next.map((r) => {
+        // Note: calculateGrade currently only takes assessmentRaw and examRaw.
+        // If you want it to use the combined CA, you will need to update
+        // the calculateGrade utility function separately.
         const calc = calculateGrade(
           r.assessmentRaw,
           r.examRaw,
