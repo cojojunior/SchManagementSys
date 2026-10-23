@@ -25,6 +25,8 @@ export default function StaffLoginPage() {
         return;
       }
 
+      await supabase.auth.signOut();
+
       const { data, error: signInError } =
         await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
@@ -45,6 +47,7 @@ export default function StaffLoginPage() {
         return;
       }
 
+      // We can use the ROLE_HOME constant directly here
       navigate(ROLE_HOME[role] ?? "/", { replace: true });
     } finally {
       setWorking(false);
