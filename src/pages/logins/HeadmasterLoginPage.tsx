@@ -53,8 +53,8 @@ export default function HeadmasterLoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center p-4 bg-gradient-to-br from-amber-50 via-white to-amber-50">
-      <Card className="w-full max-w-md border-amber-200">
+    <div className="min-h-screen grid place-items-center p-4 ">
+      <Card className="w-full max-w-md ">
         <CardBody className="space-y-6 p-8">
           <div className="text-center">
             <div className="mx-auto h-20 w-20 rounded-full bg-white border border-amber-100 grid place-items-center shadow-sm overflow-hidden p-1">

@@ -53,7 +53,7 @@ export default function SecretaryLoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center p-4 bg-gradient-to-br from-emerald-50 via-white to-emerald-50">
+    <div className="min-h-screen grid place-items-center p-4 ">
       <Card className="w-full max-w-md border-emerald-200">
         <CardBody className="space-y-6 p-8">
           <div className="text-center">
