@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -22,7 +22,6 @@ export default function AdminLoginPage() {
 
     try {
       if (!supabase) throw new Error("Supabase not configured.");
-
       await supabase.auth.signOut();
 
       const { data, error: signInError } =
@@ -37,7 +36,6 @@ export default function AdminLoginPage() {
       }
 
       const role = data.user.app_metadata?.role;
-
       if (role !== "super_admin") {
         await supabase.auth.signOut();
         setError("Unauthorized. This portal is for Super Admins only.");
@@ -57,15 +55,11 @@ export default function AdminLoginPage() {
       <Card className="w-full max-w-md bg-slate-800 border-slate-700">
         <CardBody className="space-y-6 p-8">
           <div className="text-center">
-            {/* Replaced generic icon with SUAC logo inside a white circle for contrast */}
             <div className="mx-auto h-20 w-20 rounded-full bg-white grid place-items-center shadow-lg overflow-hidden p-1">
               <img
                 src="/SUAC-LOGO.svg"
-                alt="Supreme Academy"
+                alt="Logo"
                 className="h-full w-full object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
               />
             </div>
             <h1 className="mt-5 text-xl font-bold text-white">
@@ -84,13 +78,8 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-slate-900 border-slate-700 text-white"
-                autoComplete="username"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck={false}
               />
             </FormField>
-
             <FormField
               label="Password"
               required
@@ -99,16 +88,13 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-slate-900 border-slate-700 text-white"
-                autoComplete="current-password"
               />
             </FormField>
-
             {error && (
               <div className="text-sm text-red-400 bg-red-900/20 border border-red-900/50 rounded-lg px-4 py-3">
                 {error}
               </div>
             )}
-
             <Button
               type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -117,12 +103,11 @@ export default function AdminLoginPage() {
               {working ? "Authenticating…" : "Secure Login"}
             </Button>
           </form>
-
           <div className="text-center pt-2">
             <Link
               to="/"
               className="text-xs text-slate-500 hover:text-slate-300 inline-flex items-center gap-1">
-              <ArrowLeft className="h-3 w-3" /> Back to main portal
+              <ArrowLeft className="h-3 w-3" /> Back to portal
             </Link>
           </div>
         </CardBody>

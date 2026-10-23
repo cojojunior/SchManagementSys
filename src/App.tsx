@@ -1,10 +1,17 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { RequireRole } from "@/features/auth/RequireRole";
 import { AppShell } from "@/layouts/AppShell";
 import LandingPage from "@/pages/LandingPage";
 import NotFoundPage from "@/pages/NotFoundPage";
-import AdminLoginPage from "@/pages/admin/AdminLoginPage";
+
+// ============ New Separate Login Pages ============
+import AdminLoginPage from "@/pages/logins/AdminLoginPage";
+import HeadmasterLoginPage from "@/pages/logins/HeadmasterLoginPage";
+import TeacherLoginPage from "@/pages/logins/TeacherLoginPage";
+import SecretaryLoginPage from "@/pages/logins/SecretaryLoginPage";
+import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
+
 import AdminDashboard from "@/pages/dashboards/AdminDashboard";
 import HeadmasterDashboard from "@/pages/dashboards/HeadmasterDashboard";
 import TeacherDashboard from "@/pages/dashboards/TeacherDashboard";
@@ -54,13 +61,11 @@ import StudentResultsPage from "@/features/student-portal/StudentResultPage";
 import StudentReportPage from "@/features/student-portal/StudentReportPage";
 import StudentFeesPage from "@/features/student-portal/StudentFeesPage";
 import StudentActivatePage from "@/features/student-portal/StudentActivatePage";
-import StudentLoginPage from "@/features/student-portal/StudentLoginPage";
 import AuditLogPage from "@/features/audit/AuditLogPage";
 import ReportsPage from "@/features/reports/ReportsPage";
 import SettingsPage from "@/features/settings/SettingsPage";
 import TermsPage from "@/pages/legal/TermsPage";
 import PrivacyPage from "@/pages/legal/PrivacyPage";
-import StaffLoginPage from "@/pages/StaffLoginPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
@@ -74,12 +79,20 @@ export default function App() {
       <Routes>
         {/* ============ Public routes ============ */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<StaffLoginPage />} />
+
+        {/* Dedicated Login Pages */}
         <Route path="/admin" element={<AdminLoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/headmaster/login" element={<HeadmasterLoginPage />} />
+        <Route path="/teacher/login" element={<TeacherLoginPage />} />
+        <Route path="/secretary/login" element={<SecretaryLoginPage />} />
         <Route path="/student/login" element={<StudentLoginPage />} />
         <Route path="/student/activate" element={<StudentActivatePage />} />
+
+        {/* Generic fallback - redirects to landing instead of a blank page */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />

@@ -18,7 +18,7 @@ const ROLES: RoleCard[] = [
     label: "Headmaster",
     description: "Review & publish results",
     icon: Crown,
-    to: "/login",
+    to: "/headmaster/login",
     tone: "amber",
   },
   {
@@ -26,7 +26,7 @@ const ROLES: RoleCard[] = [
     label: "Teacher",
     description: "Enter marks & remarks",
     icon: BookOpen,
-    to: "/login",
+    to: "/teacher/login",
     tone: "sky",
   },
   {
@@ -34,7 +34,7 @@ const ROLES: RoleCard[] = [
     label: "Secretary",
     description: "Records & finances",
     icon: FileText,
-    to: "/login",
+    to: "/secretary/login",
     tone: "emerald",
   },
   {
