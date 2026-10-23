@@ -18,6 +18,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { RoleGate } from "@/features/auth/RoleGate";
+import { SubjectLeaderboard } from "./SubjectLeaderboard";
 import { useAuth } from "@/features/auth/AuthContext";
 import { resultsService } from "@/services/supabase/results";
 import { scoresService } from "@/services/supabase/scores";
@@ -65,13 +66,13 @@ export default function ResultReviewPage() {
     if (!confirmAction || !user || !result) return;
     setWorking(true);
     try {
- if (confirmAction === "approve") {
-   await resultsService.approve(result.assessmentId);
- } else if (confirmAction === "publish") {
-   await resultsService.publish(result.assessmentId);
- } else if (confirmAction === "lock") {
-   await resultsService.lock(result.assessmentId);
- }
+      if (confirmAction === "approve") {
+        await resultsService.approve(result.assessmentId);
+      } else if (confirmAction === "publish") {
+        await resultsService.publish(result.assessmentId);
+      } else if (confirmAction === "lock") {
+        await resultsService.lock(result.assessmentId);
+      }
       setConfirmAction(null);
       await reload();
     } finally {
@@ -83,10 +84,10 @@ export default function ResultReviewPage() {
     if (!user || !result) return;
     setWorking(true);
     try {
-    await resultsService.returnForCorrection(
-      result.assessmentId,
-      returnReason || "Returned for correction",
-    );
+      await resultsService.returnForCorrection(
+        result.assessmentId,
+        returnReason || "Returned for correction",
+      );
       setReturnOpen(false);
       setReturnReason("");
       await reload();
@@ -199,6 +200,11 @@ export default function ResultReviewPage() {
             {result.lowest.toFixed(1)} – {result.highest.toFixed(1)}
           </div>
         </Card>
+      </div>
+
+      {/* Subject Leaderboard */}
+      <div className="mb-6">
+        <SubjectLeaderboard rows={scores as any} />
       </div>
 
       <Card className="mb-6">
