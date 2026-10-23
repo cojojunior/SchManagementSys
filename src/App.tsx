@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { RequireRole } from "@/features/auth/RequireRole";
 import { AppShell } from "@/layouts/AppShell";
@@ -75,13 +75,6 @@ export default function App() {
         {/* ============ Public routes ============ */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<StaffLoginPage />} />
-
-        {/* Super Admin secret entry point */}
-        <Route
-          path="/admin"
-          element={<Navigate to="/login?role=super_admin" replace />}
-        />
-
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />

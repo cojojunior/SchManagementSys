@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -57,17 +57,24 @@ export default function AdminLoginPage() {
       <Card className="w-full max-w-md bg-slate-800 border-slate-700">
         <CardBody className="space-y-6 p-8">
           <div className="text-center">
-            <div className="mx-auto h-14 w-14 rounded-2xl bg-indigo-500/20 text-indigo-400 grid place-items-center">
-              <ShieldCheck className="h-7 w-7" />
+            {/* Replaced generic icon with SUAC logo inside a white circle for contrast */}
+            <div className="mx-auto h-20 w-20 rounded-full bg-white grid place-items-center shadow-lg overflow-hidden p-1">
+              <img
+                src="/SUAC-LOGO.svg"
+                alt="Supreme Academy"
+                className="h-full w-full object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
             </div>
-            <h1 className="mt-4 text-xl font-bold text-white">
+            <h1 className="mt-5 text-xl font-bold text-white">
               System Administrator
             </h1>
             <p className="text-sm text-slate-400 mt-1">Restricted Access</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Changed label to a string, added a custom class to target it via CSS below */}
             <FormField
               label="Email"
               required
@@ -78,6 +85,9 @@ export default function AdminLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-slate-900 border-slate-700 text-white"
                 autoComplete="username"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </FormField>
 
