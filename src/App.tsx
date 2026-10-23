@@ -72,6 +72,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import UserListPage from "@/features/users/UserListPage";
 import UserDetailPage from "@/features/users/UserDetailPage";
 import UserFormPage from "@/features/users/UserFormPage";
+import FinalExamsPage from "@/features/academics/final-exams/FinalExamsPage";
 
 export default function App() {
   return (
@@ -377,6 +378,14 @@ export default function App() {
             element={
               <RequireRole roles={["teacher"]}>
                 <AssessmentListPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/teacher/final-exams"
+            element={
+              <RequireRole roles={["teacher"]}>
+                <FinalExamsPage />
               </RequireRole>
             }
           />
